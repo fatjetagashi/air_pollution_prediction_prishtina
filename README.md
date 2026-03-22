@@ -119,7 +119,7 @@ Dataset-i meteorologjik përmban atribute si:
 - drejtimi i erës,
 - shpejtësia e erës.
 
-Këto të dhëna janë përdorur për të modeluar kushtet atmosferike që ndikojnë në përhapjen ose stagnimin e ndotjes.
+Këto të dhëna janë përdorur për të modeluar kushtet atmosferike që ndikojnë në përhapjen ose stagnimin e ndotjes. Të dhënat janë marrë nga OpenMeteo.
 
 ### 3. Të dhënat e ndotjes së ajrit në Prishtinë
 Dataset-i i cilësisë së ajrit përmban matje të ndotësve:
@@ -258,6 +258,7 @@ AIR_POLLUTION_PREDICTION_PRISHTINA/
 │   └── scaler.pkl
 │
 ├── pictures/
+│   ├── img.png
 │   ├── pollutant_correlation_heatmap.png
 │   ├── pollutant_vs_predictors_heatmap.png
 │   └── 4C_visualization_before_after/
