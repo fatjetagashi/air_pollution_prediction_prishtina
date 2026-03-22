@@ -327,7 +327,8 @@ Rrjedha logjike është kjo:
 
 - Ky projekt përfshin gjithashtu një dashboard interaktiv të ndërtuar me Streamlit, i cili shërben si një simulator vizual për eksplorimin në kohë reale të ndikimit që kanë prodhimi i termocentraleve dhe kushtet meteorologjike në ndotjen e ajrit në Prishtinë. Përmes këtij vizualizimi, përdoruesi mund të ndryshojë në mënyrë dinamike parametrat e prodhimit energjetik, temperaturës, reshjeve, lagështisë dhe erës, dhe të vëzhgojë menjëherë se si këto ndryshime reflektohen në nivelet e ndotësve kryesorë atmosferikë, veçanërisht te PM2.5. Dashboard-i është konceptuar si një komponent interaktiv dhe intuitiv që e bën analizën më të kuptueshme, më eksploruese dhe më afër një skenari simulues të botës reale.
 
-![Streamlit Dashboard](img.png)
+<img width="1403" height="614" alt="image" src="https://github.com/user-attachments/assets/72f790b1-7253-4fe9-ab3d-f89834b609e3" />
+
 
 ### Data collection
 
