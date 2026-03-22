@@ -2,7 +2,7 @@ import pandas as pd
 from pathlib import Path
 from statsmodels.stats.outliers_influence import variance_inflation_factor
 
-BASE_DIR = Path(__file__).resolve().parent.parent
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 INPUT = BASE_DIR / "data" / "4D_scaled_dataset.csv"
 OUTPUT = BASE_DIR / "data" / "4E_selected_dataset.csv"

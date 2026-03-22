@@ -1,7 +1,7 @@
 import pandas as pd
 from pathlib import Path
 
-BASE_DIR = Path(__file__).resolve().parent.parent
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 input_path = BASE_DIR / "data" / "1A_merged_data_hourly_2023_2025.csv"
 output_path = BASE_DIR / "data" / "2A_cleaned_no_duplicates.csv"

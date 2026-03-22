@@ -5,7 +5,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from pathlib import Path
 
-BASE_DIR = Path(__file__).resolve().parent.parent
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 INPUT_BEFORE = BASE_DIR / "data" / "3B_engineered_dataset.csv"
 INPUT_OUTLIERS = BASE_DIR / "data" / "4A_outliers_handled.csv"

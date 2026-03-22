@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 from pathlib import Path
 
-BASE_DIR = Path(__file__).resolve().parent.parent
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 input_path = BASE_DIR / "data" / "2A_cleaned_no_duplicates.csv"
 output_path = BASE_DIR / "data" / "2B_quality_checked.csv"

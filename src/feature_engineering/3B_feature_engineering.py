@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 from pathlib import Path
 
-BASE_DIR = Path(__file__).resolve().parent.parent
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 INPUT = BASE_DIR / "data" / "2D_validated_final_dataset.csv"
 OUTPUT = BASE_DIR / "data" / "3B_engineered_dataset.csv"

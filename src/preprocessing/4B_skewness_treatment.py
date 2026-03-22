@@ -3,7 +3,7 @@ import numpy as np
 from pathlib import Path
 from sklearn.preprocessing import PowerTransformer
 
-BASE_DIR = Path(__file__).resolve().parent.parent
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 INPUT = BASE_DIR / "data" / "4A_outliers_handled.csv"
 OUTPUT = BASE_DIR / "data" / "4B_skewness_handled.csv"
