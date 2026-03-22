@@ -32,7 +32,9 @@ df["hour_cos"] = np.cos(2 * np.pi * df["hour"] / 24)
 df["month_sin"] = np.sin(2 * np.pi * df["month"] / 12)
 df["month_cos"] = np.cos(2 * np.pi * df["month"] / 12)
 
-for col in ENERGY_COLS + ["wind_speed_10m (km/h)", "temperature_2m (°C)"]:
+LAG_COLS = ["total_generation_mw", "wind_speed_10m (km/h)", "temperature_2m (°C)"]
+
+for col in LAG_COLS:
     for lag in [1, 3, 6]:
         df[f"{col}_lag_{lag}h"] = df[col].shift(lag)
 
