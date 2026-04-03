@@ -1,0 +1,38 @@
+{
+  "input_path": "C:\\Users\\perve\\Desktop\\air_pollution_prediction_prishtina\\data\\4E_selected_dataset.csv",
+  "model_path": "C:\\Users\\perve\\Desktop\\air_pollution_prediction_prishtina\\models\\hdbscan_model\\hdbscan_model.pkl",
+  "scaler_path": "C:\\Users\\perve\\Desktop\\air_pollution_prediction_prishtina\\models\\hdbscan_model\\hdbscan_scaler.pkl",
+  "umap_path": "C:\\Users\\perve\\Desktop\\air_pollution_prediction_prishtina\\models\\hdbscan_model\\hdbscan_umap.pkl",
+  "outputs": {
+    "clustered_dataset": "C:\\Users\\perve\\Desktop\\air_pollution_prediction_prishtina\\data\\hdbscan_clustered_dataset.csv",
+    "metrics": "C:\\Users\\perve\\Desktop\\air_pollution_prediction_prishtina\\data\\hdbscan_metrics.csv",
+    "cluster_summary": "C:\\Users\\perve\\Desktop\\air_pollution_prediction_prishtina\\data\\hdbscan_cluster_summary.csv",
+    "feature_summary": "C:\\Users\\perve\\Desktop\\air_pollution_prediction_prishtina\\data\\hdbscan_feature_summary.csv",
+    "plot_html": "C:\\Users\\perve\\Desktop\\air_pollution_prediction_prishtina\\pictures\\hdbscan_model\\hdbscan_umap_interactive.html"
+  },
+  "config": {
+    "min_cluster_size": 80,
+    "min_samples": 20,
+    "cluster_selection_method": "eom",
+    "metric": "euclidean",
+    "umap_n_neighbors": 30,
+    "umap_min_dist": 0.05,
+    "umap_n_components": 2
+  },
+  "feature_columns": [
+    "hour_sin",
+    "hour_cos",
+    "month_sin",
+    "month_cos",
+    "pollution_stagnation_index",
+    "wind_x_vector",
+    "wind_y_vector",
+    "total_generation_mw",
+    "temperature_2m (\u00b0C)",
+    "rain (mm)",
+    "relative_humidity_2m (%)",
+    "wind_direction_10m (\u00b0)",
+    "wind_speed_10m (km/h)",
+    "pm25"
+  ]
+}
