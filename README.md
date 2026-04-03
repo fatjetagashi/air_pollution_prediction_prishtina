@@ -46,8 +46,8 @@
    - [Ekzekutimi i projektit](#ekzekutimi-i-projektit)
    - [Rezultati final i pipeline-it](#rezultati-final-i-pipeline-it)
    - [Zgjerime në vazhdim](#zgjerime-në-vazhdim)
-4. [02 Modelimi dhe analiza]
-     -[Qasja e përgjithshme]
+4. [02 Modelimi dhe analiza](#02-modelimi-dhe-analiza)
+     -[Qasja e përgjithshme](qasja-e-përgjithshme)
      -[CatBoost për parashikimin e PM2.5](catboost-për-parashikimin-e-PM2.5)
      -[HDBSCAN për analizë unsupervised](hdbscan-për-analizë-unsupervised)
      -[Validimi korrekt pa leakage](validimi-korrekt-pa-leakage])
