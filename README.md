@@ -46,6 +46,49 @@
    - [Ekzekutimi i projektit](#ekzekutimi-i-projektit)
    - [Rezultati final i pipeline-it](#rezultati-final-i-pipeline-it)
    - [Zgjerime në vazhdim](#zgjerime-në-vazhdim)
+4. [02 Modelimi dhe analiza](#02-modelimi-dhe-analiza)
+   - [Qasja e përgjithshme](qasja-e-përgjithshme)
+   - [CatBoost për parashikimin e PM2.5](catboost-për-parashikimin-e-PM2.5)
+   - [HDBSCAN për analizë unsupervised](hdbscan-për-analizë-unsupervised)
+   - [Validimi korrekt pa leakage](validimi-korrekt-pa-leakage])
+   - [Metrikat dhe interpretimi i rezultateve](metrikat-dhe-interpretimi-i-rezultateve)
+   - [Artefaktet e krijuara nga modelet](artefaktet-e-krijuara-nga-modelet)
+   - [Vizualizimet interaktive](vizualizimet-interaktive)
+6. [Zgjerime në vazhdim](zgjerime-në-vazhdim)
+7. [Anëtarët e grupit](anëtarët-e-grupit)
+8. [Acknowledgments](acknowledgments)
+---
+## Përmbajtja
+1. Përmbledhje e projektit
+2. Qëllimi i punimit
+3. 01 Përgatitja e modelit
+   * Burimet e të dhënave
+   * Përshkrimi i dataset-eve hyrëse
+   * Struktura e repository-t
+   * Topologjia e pipeline-it
+   * Përshkrimi i detajuar i çdo skripte
+     * Data collection
+     * Integration
+     * Distinct values
+     * Data cleaning
+     * Feature engineering
+     * Preprocessing
+   * Artefaktet dhe output-et e krijuara
+   * Vizualizimet e gjeneruara
+   * Teknikat e zbatuara dhe lidhja me lëndën
+   * Ekzekutimi i projektit
+   * Rezultati final i pipeline-it
+4. 02 Modelimi dhe analiza
+   * Qasja e përgjithshme
+   * CatBoost për parashikimin e PM2.5
+   * HDBSCAN për analizë unsupervised
+   * Validimi korrekt pa leakage
+   * Metrikat dhe interpretimi i rezultateve
+   * Artefaktet e krijuara nga modelet
+   * Vizualizimet interaktive
+5. Zgjerime në vazhdim
+6. Anëtarët e grupit
+7. Acknowledgments
 ---
 
 ## Përmbledhje e projektit
@@ -70,6 +113,8 @@ Më pas, këto burime:
 
 Ky projekt demonstron të gjithë ciklin e përgatitjes së të dhënave: nga kolektimi, integrimi dhe kontrolli i cilësisë, deri te feature engineering, transformimi statistikor dhe feature selection.
 
+Në fazën e dytë, dataset-i final `4E_selected_dataset.csv` është përdorur edhe për modelim dhe analizë eksploruese të avancuar. Konkretisht, është implementuar një model supervised `CatBoostRegressor` për parashikimin e `PM2.5` mbi ndarjen kronologjike `train/validation/test`, si dhe një model unsupervised `HDBSCAN` për identifikimin e strukturave natyrore, cluster-ëve dhe outlier-ave në të dhënat e përgatitura. Kjo e zgjeron projektin nga një pipeline i përgatitjes së të dhënave në një workflow të plotë analitik dhe modelues.
+
 ---
 
 ## Qëllimi i punimit
@@ -91,6 +136,8 @@ Objektivat kryesore janë:
 - të zbutet ndikimi i outlier-ave dhe shpërndarjeve shumë të shtrembëruara;
 - të standardizohet dataset-i për përdorim në modele statistikore dhe machine learning;
 - të eliminohet multikolineariteti i tepërt përmes VIF-based feature selection.
+- të përdoret dataset-i final i përzgjedhur për ndërtimin dhe validimin e një modeli supervised për parashikimin e `PM2.5`;
+- të analizohet struktura e brendshme e të dhënave përmes një metode unsupervised clustering, me qëllim identifikimin e regjimeve të ndryshme të ndotjes dhe kushteve atmosferike.
 
 ---
 
@@ -209,13 +256,19 @@ Karakteristikat e dataset-it:
 ---
 
 ### Struktura e repository-t
-
 ```text
 AIR_POLLUTION_PREDICTION_PRISHTINA/
 │
-├── app.py #Vizualizimi i tere projektit
+├── app.py                       # Vizualizimi i tërë projektit
 │
 ├── src/
+│   ├── catboost_model/
+│   │   ├── catboost_info/
+│   │   └── catboost_model.py
+│   │
+│   ├── hdbscan_model/
+│   │   └── hdbscan_model.py
+│   │
 │   ├── data_cleaning/
 │   │   ├── 2A_datetime_and_duplicates.py
 │   │   ├── 2B_data_quality_cleaning.py
@@ -255,25 +308,30 @@ AIR_POLLUTION_PREDICTION_PRISHTINA/
 │   ├── 4A_outliers_handled.csv
 │   ├── 4B_skewness_handled.csv
 │   ├── 4D_scaled_dataset.csv
-│   └── 4E_selected_dataset.csv
+│   ├── 4E_selected_dataset.csv
+│   ├── catboost_forecasts.csv
+│   ├── catboost_metrics.csv
+│   ├── catboost_feature_importance.csv
+│   ├── catboost_split_summary.csv
+│   ├── hdbscan_clustered_dataset.csv
+│   ├── hdbscan_metrics.csv
+│   ├── hdbscan_cluster_summary.csv
+│   └── hdbscan_feature_summary.csv
 │
 ├── models/
-│   └── scaler.pkl
+│   ├── scaler.pkl
+│   ├── catboost_model/
+│   └── hdbscan_model/
 │
 ├── pictures/
-│   ├── img.png
-│   ├── pollutant_correlation_heatmap.png
-│   ├── pollutant_vs_predictors_heatmap.png
-│   └── 4C_visualization_before_after/
-│       ├── pm25_distribution_comparison.png
-│       ├── pollution_stagnation_index_distribution_comparison.png
-│       ├── rain_mm_distribution_comparison.png
-│       ├── temp_wind_interact_distribution_comparison.png
-│       └── total_generation_mw_distribution_comparison.png
+│   ├── catboost_model/
+│   └── hdbscan_model/
 │
-└── README.md
-```
+├── README.md
+├── test.py
+└── .gitignore
 
+```
 ---
 
 ### Topologjia e pipeline-it
@@ -1236,6 +1294,639 @@ Dataset-i final:
 - regresion,
 - krahasim modelesh machine learning,
 - analiza statistikore të marrëdhënieve mes energjisë, motit dhe ndotjes.
+  
+---
+
+## 02 Modelimi dhe analiza
+
+Pas përfundimit të pipeline-it të përgatitjes së të dhënave, dataset-i final `data/4E_selected_dataset.csv` është përdorur si hyrje për një fazë të dytë të projektit, e fokusuar në modelim dhe analizë të avancuar. Kjo fazë e zgjeron projektin nga një pipeline i pastrimit dhe përgatitjes së të dhënave në një workflow të plotë të machine learning dhe data analysis.
+
+Në këtë fazë janë zhvilluar dy qasje komplementare:
+
+- një qasje **supervised**, për parashikimin e `PM2.5` me `CatBoostRegressor`;
+- një qasje **unsupervised**, për analizimin e strukturës së brendshme të të dhënave me `HDBSCAN`.
+
+Qëllimi i kësaj pjese nuk është vetëm ndërtimi i modeleve, por edhe demonstrimi që dataset-i final i krijuar nga pipeline-i është realisht i përdorshëm për:
+
+- parashikim,
+- validim korrekt kohor,
+- interpretim të tipareve,
+- dhe eksplorim të cluster-ëve dhe outlier-ave në të dhënat mjedisore dhe energjetike.
+
+---
+
+### Qasja e përgjithshme
+
+Faza e modelimit është ndërtuar mbi parimet e mëposhtme:
+
+1. **Përdorim i dataset-it final të selektuar**
+   - Input kryesor për modelet është:
+     - `data/4E_selected_dataset.csv`
+
+2. **Ruajtje e rendit kronologjik**
+   - Për modelin supervised, ndarja e të dhënave është bërë sipas kohës dhe jo rastësisht, për të shmangur leakage dhe për të simuluar më mirë një skenar real parashikimi.
+
+3. **Përdorim i tipareve numerike të përzgjedhura**
+   - Dataset-i final tashmë përmban një përzgjedhje tiparesh të reduktuara përmes preprocessing dhe VIF-based feature selection, prandaj është përdorur drejtpërdrejt si bazë për modelim.
+
+4. **Ruajtje e artefakteve**
+   - Çdo model ruan output-et e veta në `data/`, `models/` dhe `pictures/`, në mënyrë që rezultatet të jenë të gjurmueshme dhe të riprodhueshme.
+
+---
+
+### CatBoost për parashikimin e PM2.5
+
+Për modelimin supervised është përdorur `CatBoostRegressor`, një algoritëm gradient boosting shumë i përshtatshëm për të dhëna tabulare, marrëdhënie jo-lineare dhe ndërveprime komplekse ndërmjet tipareve meteorologjike, energjetike dhe kohore.
+
+Ky model është zgjedhur sepse:
+
+- punon shumë mirë me të dhëna tabulare të përpunuara paraprakisht,
+- është më i lehtë për t’u trajnuar sesa modelet deep learning të tipit time-series,
+- është i qëndrueshëm ndaj noise-it dhe feature interactions,
+- dhe jep lehtësisht interpretim përmes `feature importance`.
+
+#### Input
+
+Modeli lexon dataset-in final:
+
+- `data/4E_selected_dataset.csv`
+
+dhe identifikon kolonën kohore (`datetime` ose `date`) për të ruajtur renditjen kronologjike të vëzhgimeve.
+
+#### Target
+
+Target-i i përzgjedhur për modelin supervised është:
+
+- `pm25`
+
+#### Feature-at hyrëse
+
+Pas leximit të dataset-it:
+
+- kolonat boolean, nëse ekzistojnë, kthehen në `int`,
+- mbahen kolonat numerike,
+- target-i hiqet nga lista e feature-ave,
+- përjashtohen kolonat teknike me prapashtesë `"_was_missing"` nëse ekzistojnë.
+
+Në ekzekutimin aktual, modeli ka përdorur këto feature-a:
+
+- `hour_sin`
+- `hour_cos`
+- `month_sin`
+- `month_cos`
+- `pollution_stagnation_index`
+- `wind_x_vector`
+- `wind_y_vector`
+- `total_generation_mw`
+- `temperature_2m (°C)`
+- `rain (mm)`
+- `relative_humidity_2m (%)`
+- `wind_direction_10m (°)`
+- `wind_speed_10m (km/h)`
+
+#### Fragment kyç i kodit: konfigurimi i hyrjes
+
+```python
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
+
+INPUT_PATH = BASE_DIR / "data" / "4E_selected_dataset.csv"
+
+MODEL_DIR = BASE_DIR / "models" / "catboost_model"
+PLOTS_DIR = BASE_DIR / "pictures" / "catboost_model"
+
+OUTPUT_FORECASTS = BASE_DIR / "data" / "catboost_forecasts.csv"
+OUTPUT_METRICS = BASE_DIR / "data" / "catboost_metrics.csv"
+OUTPUT_FEATURES = BASE_DIR / "data" / "catboost_feature_importance.csv"
+OUTPUT_SPLIT_SUMMARY = BASE_DIR / "data" / "catboost_split_summary.csv"
+
+TARGET = "pm25"
+TIME_CANDIDATES = ["datetime", "date"]
+````
+
+#### Data quality check në këtë fazë
+
+Para trajnimit, skripta bën kontrollin bazë të cilësisë për këtë fazë të modelimit:
+
+* kontrollon ekzistencën e target-it,
+* kontrollon mungesat në target dhe feature-a,
+* zëvendëson `inf` dhe `-inf` me `NaN`,
+* dhe heq rreshtat jo të plotë vetëm nëse janë të nevojshëm.
+
+Në ekzekutimin e raportuar:
+
+* numri i rreshtave hyrës ka qenë **9347**
+* numri i feature-ave ka qenë **13**
+* mungesa në kolonat e modelit kanë qenë **0**
+* rreshta të hequr pas cleaning: **0**
+
+#### Fragment kyç i kodit: kontrollet para modelit
+
+```python
+numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
+feature_cols = [c for c in numeric_cols if c != TARGET and not c.endswith("_was_missing")]
+
+for c in [TARGET] + feature_cols:
+    df[c] = pd.to_numeric(df[c], errors="coerce")
+
+df[[TARGET] + feature_cols] = df[[TARGET] + feature_cols].replace([np.inf, -np.inf], np.nan)
+df = df.dropna(subset=[TARGET] + feature_cols).copy()
+```
+
+#### Validimi korrekt pa leakage
+
+Për këtë model nuk është përdorur `random train_test_split`, por një ndarje kronologjike në tri pjesë:
+
+* `train`
+* `validation`
+* `test`
+
+Kjo qasje është shumë e rëndësishme për problemin tonë, sepse të dhënat janë kohore dhe modeli duhet të testojë aftësinë për të parashikuar të ardhmen nga e kaluara, jo nga vlera të përziera rastësisht.
+
+Në ekzekutimin aktual, ndarja ka qenë:
+
+* `Train rows: 6542`
+* `Val rows: 1402`
+* `Test rows: 1403`
+
+me intervale:
+
+* `Train range: 2023-08-18 09:00:00 -> 2025-07-17 21:00:00`
+* `Val range: 2025-07-17 22:00:00 -> 2025-09-18 12:00:00`
+* `Test range: 2025-09-18 13:00:00 -> 2025-11-27 19:00:00`
+
+#### Fragment kyç i kodit: ndarja kronologjike
+
+```python
+n = len(df)
+train_end_idx = int(n * TRAIN_RATIO)
+val_end_idx = int(n * (TRAIN_RATIO + VAL_RATIO))
+
+train_df = df.iloc[:train_end_idx].copy()
+val_df = df.iloc[train_end_idx:val_end_idx].copy()
+test_df = df.iloc[val_end_idx:].copy()
+```
+
+#### Parametrat e modelit
+
+Modeli `CatBoostRegressor` është inicializuar me parametrat:
+
+* `iterations = 600`
+* `learning_rate = 0.03`
+* `depth = 6`
+* `loss_function = "RMSE"`
+* `eval_metric = "RMSE"`
+* `early_stopping_rounds = 50`
+
+Ky konfigurim është zgjedhur për të krijuar një model mjaftueshëm të fuqishëm për parashikim, por njëkohësisht praktik për trajnim dhe debug në mjedis lokal.
+
+#### Fragment kyç i kodit: inicializimi i modelit
+
+```python
+model = CatBoostRegressor(
+    iterations=600,
+    learning_rate=0.03,
+    depth=6,
+    loss_function="RMSE",
+    eval_metric="RMSE",
+    random_seed=42,
+    verbose=100
+)
+```
+
+#### Trajnimi
+
+Gjatë trajnimit, skripta:
+
+* përdor `train` për mësim,
+* përdor `validation` për kontroll të performancës,
+* aktivizon `use_best_model=True`,
+* dhe përdor `early_stopping_rounds=50`.
+
+#### Fragment kyç i kodit: trajnimi dhe validimi
+
+```python
+model.fit(
+    X_train, y_train,
+    eval_set=(X_val, y_val),
+    use_best_model=True,
+    early_stopping_rounds=50
+)
+```
+
+Në ekzekutimin aktual, modeli ka arritur:
+
+* `bestTest = 0.7030203514`
+* `bestIteration = 599`
+
+dhe është ruajtur në:
+
+* `models/catboost_model/catboost_pm25_model.cbm`
+
+#### Predikimi dhe metrikat
+
+Pas trajnimit, modeli gjeneron parashikime mbi test set-in dhe llogarit metrikat:
+
+* `MAE`
+* `RMSE`
+* `MAPE`
+* `SMAPE`
+* `R²`
+
+Në ekzekutimin e raportuar, rezultatet kanë qenë:
+
+* `MAE = 0.800051`
+* `RMSE = 1.005971`
+* `MAPE_pct = 357.542306`
+* `SMAPE_pct = 108.638466`
+* `R2 = 0.331006`
+* `n_eval_points = 1403`
+
+#### Fragment kyç i kodit: metrikat
+
+```python
+metrics = {
+    "MAE": mae(y_true, y_pred),
+    "RMSE": rmse(y_true, y_pred),
+    "MAPE_pct": mape(y_true, y_pred),
+    "SMAPE_pct": smape(y_true, y_pred),
+    "R2": float(r2_score(y_true, y_pred))
+}
+```
+
+#### Çfarë printohet gjatë ekzekutimit
+
+Skripta e CatBoost-it printon në console këto seksione:
+
+* `DATA QUALITY CHECK`
+* `CHRONOLOGICAL SPLIT SUMMARY`
+* `TRAINING`
+* `PREDICTION + METRICS`
+* `DONE`
+
+Pra, gjatë ekzekutimit përdoruesi mund të shohë në mënyrë të drejtpërdrejtë:
+
+* numrin e rreshtave hyrës,
+* numrin e feature-ave,
+* mungesat para cleaning,
+* ndarjen train/val/test,
+* progresin e trajnimit,
+* metrikat finale,
+* dhe rrugët ku ruhen file-t.
+
+#### Artefaktet e gjeneruara nga CatBoost
+
+Skripta ruan këto output-e:
+
+* `data/catboost_forecasts.csv`
+  Parashikimet në test set bashkë me vlerat reale dhe residuals.
+
+* `data/catboost_metrics.csv`
+  Tabela e metrikave finale.
+
+* `data/catboost_feature_importance.csv`
+  Rëndësia e secilit feature.
+
+* `data/catboost_split_summary.csv`
+  Përmbledhja e ndarjes kronologjike.
+
+* `models/catboost_model/catboost_pm25_model.cbm`
+  Modeli i trajnuar.
+
+* `data/catboost_run_info.json`
+  Përmbledhje e konfigurimit dhe output-eve.
+
+#### Vizualizimi interaktiv
+
+Skripta përfshin edhe ndërtimin e një grafiku interaktiv `Observed vs Predicted` me Plotly, ku parashikohet ruajtja e figurave në:
+
+* `pictures/catboost_model/catboost_forecast_interactive.html`
+* `pictures/catboost_model/catboost_forecast_interactive.png`
+
+Ky hap ishte implementuar në kod, por në ekzekutimin aktual skripta është ndalur te pjesa e vizualizimit për shkak të një problemi teknik me `Plotly add_vline()` dhe `Timestamp`, pasi modeli dhe metrikat ishin llogaritur tashmë me sukses.
+
+---
+
+### HDBSCAN për analizë unsupervised
+
+Për analizën unsupervised është përdorur `HDBSCAN`, një algoritëm clustering i bazuar në densitet, i cili nuk kërkon përcaktim paraprak të numrit të cluster-ëve dhe është shumë i përshtatshëm për të dhëna reale me shape të parregullt, densitete të ndryshme dhe presence të outlier-ave.
+
+Kjo pjesë është ndërtuar për të eksploruar strukturën latente të dataset-it final dhe për të identifikuar:
+
+* profile të ngjashme të vëzhgimeve,
+* cluster-a me kushte të ngjashme meteorologjike dhe energjetike,
+* si dhe pikat që sillen si noise ose anomali.
+
+#### Input
+
+Si edhe te CatBoost, hyrja është:
+
+* `data/4E_selected_dataset.csv`
+
+#### Përgatitja e feature-ave
+
+Për HDBSCAN përdoren kolonat numerike të dataset-it final. Në këtë fazë:
+
+* kolonat boolean, nëse ekzistojnë, kthehen në `int`,
+* zgjidhen kolonat numerike,
+* përjashtohen kolonat teknike ose kolonat që krijohen nga vetë clustering-u,
+* përjashtohen kolonat me prapashtesë `"_was_missing"`.
+
+#### Fragment kyç i kodit: përzgjedhja e kolonave numerike
+
+```python
+def numeric_feature_columns(df: pd.DataFrame) -> list[str]:
+    bool_cols = df.select_dtypes(include=["bool"]).columns.tolist()
+    for c in bool_cols:
+        df[c] = df[c].astype(int)
+
+    num_cols = df.select_dtypes(include=[np.number]).columns.tolist()
+
+    drop_like = {
+        "unnamed: 0",
+        "cluster_label",
+        "cluster_probability",
+        "outlier_score",
+        "umap_1",
+        "umap_2",
+    }
+
+    num_cols = [c for c in num_cols if c not in drop_like and not c.endswith("_was_missing")]
+    return num_cols
+```
+
+#### Standardizimi
+
+Para clustering-ut, tiparet standardizohen me `StandardScaler`, në mënyrë që kolonat me shkallë të ndryshme të mos dominojnë ndërtimin e cluster-ëve.
+
+#### Fragment kyç i kodit: scaling
+
+```python
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
+joblib.dump(scaler, SCALER_PATH)
+```
+
+#### Parametrat e HDBSCAN
+
+Modeli është konfiguruar me:
+
+* `min_cluster_size = 80`
+* `min_samples = 20`
+* `cluster_selection_method = "eom"`
+* `metric = "euclidean"`
+
+#### Fragment kyç i kodit: inicializimi i HDBSCAN
+
+```python
+clusterer = hdbscan.HDBSCAN(
+    min_cluster_size=MIN_CLUSTER_SIZE,
+    min_samples=MIN_SAMPLES,
+    cluster_selection_method=CLUSTER_SELECTION_METHOD,
+    metric=METRIC,
+    prediction_data=True,
+    gen_min_span_tree=True,
+)
+```
+
+#### Çfarë prodhon HDBSCAN
+
+Pas trajnimit, modeli gjeneron për çdo vëzhgim:
+
+* `cluster_label`
+* `cluster_probability`
+* `outlier_score`
+
+Këto kolona shtohen në dataset-in final të cluster-uar.
+
+#### Reduktimi dimensional për vizualizim
+
+Për të vizualizuar cluster-at në 2 dimensione, skripta përdor `UMAP` me konfigurim:
+
+* `n_neighbors = 30`
+* `min_dist = 0.05`
+* `n_components = 2`
+
+#### Fragment kyç i kodit: UMAP
+
+```python
+reducer = umap.UMAP(
+    n_neighbors=30,
+    min_dist=0.05,
+    n_components=2,
+    metric="euclidean",
+    random_state=42,
+)
+
+embedding = reducer.fit_transform(X_scaled)
+```
+
+Pas këtij hapi krijohen kolonat:
+
+* `umap_1`
+* `umap_2`
+
+të cilat përdoren për vizualizimin interaktiv të cluster-ëve.
+
+#### Metrikat e clustering-ut
+
+Për vlerësimin e strukturës së cluster-ëve, skripta llogarit:
+
+* `silhouette_score`
+* `davies_bouldin_score`
+* `calinski_harabasz_score`
+
+duke përjashtuar pikat `noise` (`cluster_label = -1`) aty ku kërkohet.
+
+#### Fragment kyç i kodit: metrikat e brendshme
+
+```python
+internal = {
+    "silhouette_score": silhouette_score(X_core, y_core),
+    "davies_bouldin_score": davies_bouldin_score(X_core, y_core),
+    "calinski_harabasz_score": calinski_harabasz_score(X_core, y_core),
+}
+```
+
+#### Çfarë printohet gjatë ekzekutimit
+
+Skripta e HDBSCAN është ndërtuar që të printojë në console këto seksione:
+
+* `DATA QUALITY CHECK`
+* `SCALING`
+* `HDBSCAN TRAINING`
+* `UMAP EMBEDDING`
+* `CLUSTERING METRICS`
+* `INTERACTIVE VISUALIZATION`
+* `DONE`
+
+Pra, gjatë ekzekutimit përdoruesi mund të shohë:
+
+* sa rreshta ka dataset-i para dhe pas cleaning,
+* cilat feature përdoren,
+* metrikat e clustering-ut,
+* sa cluster-a janë gjetur,
+* sa pika janë klasifikuar si noise,
+* dhe ku janë ruajtur output-et.
+
+#### Artefaktet e gjeneruara nga HDBSCAN
+
+Skripta ruan këto output-e:
+
+* `data/hdbscan_clustered_dataset.csv`
+  Dataset-i final me kolonat `cluster_label`, `cluster_probability`, `outlier_score`, `umap_1`, `umap_2`.
+
+* `data/hdbscan_metrics.csv`
+  Metrikat e clustering-ut dhe përmbledhja e modelit.
+
+* `data/hdbscan_cluster_summary.csv`
+  Përmbledhje statistikore për çdo cluster.
+
+* `data/hdbscan_feature_summary.csv`
+  Përmbledhje e tipareve që dallojnë më shumë cluster-at.
+
+* `models/hdbscan_model/hdbscan_model.pkl`
+  Modeli i trajnuar.
+
+* `models/hdbscan_model/hdbscan_scaler.pkl`
+  Scaler-i i përdorur për standardizim.
+
+* `models/hdbscan_model/hdbscan_umap.pkl`
+  Objekti i ruajtur i reduktimit dimensional.
+
+* `data/hdbscan_run_info.json`
+  Informacion për konfigurimin dhe rrugët e output-eve.
+
+#### Vizualizimi interaktiv
+
+Vizualizimi interaktiv i cluster-ëve gjenerohet në:
+
+* `pictures/hdbscan_model/hdbscan_umap_interactive.html`
+* `pictures/hdbscan_model/hdbscan_umap_interactive.png`
+
+Ky vizualizim lejon:
+
+* dallimin e cluster-ëve në plan 2D,
+* evidentimin e noise/outlier points,
+* dhe inspektimin e feature-ave kryesore për secilin vëzhgim përmes hover.
+
+---
+
+### Metrikat dhe interpretimi i rezultateve
+
+Në këtë fazë janë përdorur dy nivele interpretimi:
+
+#### 1. Interpretimi supervised
+
+Te `CatBoost`, interpretimi bazohet në:
+
+* metrikat e regresionit,
+* krahasimin ndërmjet vlerave reale dhe të parashikuara,
+* residuals,
+* dhe rëndësinë e feature-ave.
+
+Kjo ndihmon në kuptimin se:
+
+* sa mirë modeli e parashikon `PM2.5`,
+* cilat tipare ndikojnë më shumë në parashikim,
+* dhe sa e qëndrueshme është performanca në test set.
+
+#### 2. Interpretimi unsupervised
+
+Te `HDBSCAN`, interpretimi bazohet në:
+
+* numrin dhe përmasat e cluster-ëve,
+* pikat noise,
+* probabilitetet e anëtarësimit në cluster,
+* outlier scores,
+* dhe përmbledhjet statistikore të feature-ave sipas cluster-it.
+
+Kjo ndihmon për të kuptuar:
+
+* nëse të dhënat ndahen në profile natyrore,
+* nëse ekzistojnë regjime të ndryshme të ndotjes,
+* dhe cilat kombinime të motit dhe energjisë shfaqin sjellje të ngjashme.
+
+---
+
+### Artefaktet e krijuara nga modelet
+
+Pas fazës së dytë të projektit, përveç output-eve të pipeline-it të përgatitjes së të dhënave, janë krijuar edhe artefakte të reja modelimi.
+
+#### CatBoost
+
+* `data/catboost_forecasts.csv`
+* `data/catboost_metrics.csv`
+* `data/catboost_feature_importance.csv`
+* `data/catboost_split_summary.csv`
+* `data/catboost_run_info.json`
+* `models/catboost_model/catboost_pm25_model.cbm`
+* `pictures/catboost_model/catboost_forecast_interactive.html`
+* `pictures/catboost_model/catboost_forecast_interactive.png`
+
+#### HDBSCAN
+
+* `data/hdbscan_clustered_dataset.csv`
+* `data/hdbscan_metrics.csv`
+* `data/hdbscan_cluster_summary.csv`
+* `data/hdbscan_feature_summary.csv`
+* `data/hdbscan_run_info.json`
+* `models/hdbscan_model/hdbscan_model.pkl`
+* `models/hdbscan_model/hdbscan_scaler.pkl`
+* `models/hdbscan_model/hdbscan_umap.pkl`
+* `pictures/hdbscan_model/hdbscan_umap_interactive.html`
+* `pictures/hdbscan_model/hdbscan_umap_interactive.png`
+
+---
+
+### Vizualizimet interaktive
+
+Në këtë fazë janë ndërtuar edhe vizualizime të reja, përtej heatmap-ave dhe histogramave të pipeline-it fillestar.
+
+#### Vizualizimi i CatBoost
+
+Grafiku interaktiv `Observed vs Predicted` është konceptuar për të paraqitur:
+
+* serinë reale të `PM2.5`,
+* parashikimet në test set,
+* residuals,
+* dhe kufijtë kohorë ndërmjet `train`, `validation` dhe `test`.
+
+Ky vizualizim ruhet në:
+
+* `pictures/catboost_model/catboost_forecast_interactive.html`
+
+#### Vizualizimi i HDBSCAN
+
+Vizualizimi 2D me `UMAP` është konceptuar për të paraqitur:
+
+* shpërndarjen e vëzhgimeve në hapësirë të reduktuar,
+* cluster-at e gjetur nga HDBSCAN,
+* noise points,
+* dhe karakteristikat kryesore në hover.
+
+Ky vizualizim ruhet në:
+
+* `pictures/hdbscan_model/hdbscan_umap_interactive.html`
+
+---
+
+### Rezultati i zgjeruar i pipeline-it
+
+Produkti final i këtij projekti nuk është më vetëm një dataset i përgatitur, por një bazë e plotë për analizë dhe modelim.
+
+Rezultati final përfshin:
+
+* një dataset të integruar, të pastruar, të validuar dhe të transformuar;
+* një subset final tiparesh të përshtatshme për modelim;
+* një model supervised `CatBoostRegressor` për parashikimin e `PM2.5`;
+* një model unsupervised `HDBSCAN` për clustering dhe outlier analysis;
+* artefakte të metrikave, parashikimeve, cluster-ëve dhe rëndësisë së tipareve;
+* si dhe vizualizime interaktive për interpretim më të qartë të rezultateve.
+
+Kjo do të thotë se pipeline-i i ndërtuar në këtë projekt tashmë përbën jo vetëm një proces të përgatitjes së të dhënave, por edhe një bazë funksionale për krahasim modelesh, analiza të mëtejshme dhe zgjerim në faza të ardhshme.
+
+---
+
 
 ---
 
