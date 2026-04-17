@@ -47,16 +47,17 @@
    - [Rezultati final i pipeline-it](#rezultati-final-i-pipeline-it)
    - [Zgjerime në vazhdim](#zgjerime-në-vazhdim)
 4. [02 Modelimi dhe analiza](#02-modelimi-dhe-analiza)
-   - [Qasja e përgjithshme](qasja-e-përgjithshme)
-   - [CatBoost për parashikimin e PM2.5](catboost-për-parashikimin-e-PM2.5)
-   - [HDBSCAN për analizë unsupervised](hdbscan-për-analizë-unsupervised)
-   - [Validimi korrekt pa leakage](validimi-korrekt-pa-leakage])
-   - [Metrikat dhe interpretimi i rezultateve](metrikat-dhe-interpretimi-i-rezultateve)
-   - [Artefaktet e krijuara nga modelet](artefaktet-e-krijuara-nga-modelet)
-   - [Vizualizimet interaktive](vizualizimet-interaktive)
-6. [Zgjerime në vazhdim](zgjerime-në-vazhdim)
-7. [Anëtarët e grupit](anëtarët-e-grupit)
-8. [Acknowledgments](acknowledgments)
+   - [Qasja e përgjithshme](#qasja-e-përgjithshme)
+   - [CatBoost për parashikimin e PM2.5](#catboost-për-parashikimin-e-pm25)
+   - [LightGBM për parashikimin e PM2.5](#lightgbm-për-parashikimin-e-pm25)
+   - [HDBSCAN për analizë unsupervised](#hdbscan-për-analizë-unsupervised)
+   - [Validimi korrekt pa leakage](#validimi-korrekt-pa-leakage)
+   - [Metrikat dhe interpretimi i rezultateve](#metrikat-dhe-interpretimi-i-rezultateve)
+   - [Artefaktet e krijuara nga modelet](#artefaktet-e-krijuara-nga-modelet)
+   - [Vizualizimet interaktive](#vizualizimet-interaktive)
+5. [Zgjerime në vazhdim](#zgjerime-në-vazhdim)
+6. [Anëtarët e grupit](#anëtarët-e-grupit)
+7. [Acknowledgments](#acknowledgments)
 ---
 ## Përmbajtja
 1. Përmbledhje e projektit
@@ -81,6 +82,7 @@
 4. 02 Modelimi dhe analiza
    * Qasja e përgjithshme
    * CatBoost për parashikimin e PM2.5
+   * LightGBM për parashikimin e PM2.5
    * HDBSCAN për analizë unsupervised
    * Validimi korrekt pa leakage
    * Metrikat dhe interpretimi i rezultateve
