@@ -1606,6 +1606,53 @@ Ky hap ishte implementuar në kod, por në ekzekutimin aktual skripta është nd
 
 ---
 
+### LightGBM për parashikimin e PM2.5
+
+#### Pse LightGBM?
+* **Shpejtësi dhe efikasitet:** Algoritmi përdor *Gradient Boosting* të bazuar në pemë, duke ofruar performancë të lartë në të dhëna tabelare.
+* **Qartësi analitike (Feature Importance):** Ofron transparencë të plotë mbi peshën që ka secili faktor (prodhimi i energjisë elektrike, era, temperatura) në rezultatin final.
+
+#### 1. Skenari izolues (Modeli baseline)
+Në këtë fazë, modeli u trajnua duke përdorur ekskluzivisht prodhimin e energjisë dhe kushtet meteorologjike, pa përfshirë informacion mbi ndotjen e orëve të kaluara.
+
+<img width="800" height="120" alt="image" src="https://github.com/user-attachments/assets/8f29a1b5-b0c6-4f6f-9358-e43522753493" /> <br />
+
+* **R² Score:** 0.1944
+* **Konstatimi:** Rezultati prej ~19% është një gjetje e rëndësishme. Kjo vërteton shkencërisht se sado të sakta të jenë të dhënat e motit apo raportimet e energjisë, PM2.5 nuk mund të parashikohet saktë vetëm përmes inputeve të çastit, pasi grimcat kanë një natyrë të lartë akumuluese në atmosferë.
+
+#### 2. Modeli dinamik (Skenari me "lags")
+Për të rregulluar këtë dhe për t'u dhënë kuptim faktorëve tanë kryesorë, modeli u përmirësua duke përfshirë variablat autogresive **pm25_lag_1** dhe **pm25_lag_24** (kujtesa e ajrit). Kjo rriti saktësinë në mënyrë drastike nga **0.19 në 0.73**.
+
+<img width="800" height="120" alt="image" src="https://github.com/user-attachments/assets/7a87d2be-a7ae-47b8-a219-3c9c764669d7" /> <br />
+
+**Roli i motit dhe energjisë në modelin e ri:**
+Përfshirja e *lags* nuk i zhvlerëson variablat tona, por i vendos në kontekstin e duhur fizik:
+* **Gjendja bazë:** Ndotja paraprake (`lag`) përcakton sasinë e smogut që tashmë gjendet në atmosferë.
+* **Katalizatorët:** Prodhimi i energjisë dhe moti veprojnë si agjentët kryesorë që rrisin këtë bazë (përmes emetimeve shtesë) ose e ulin atë (përmes shpërndarjes nga era).
+
+#### Rezultatet dhe vizualizimet
+
+**Rëndësia e veçorive:**
+Analiza e fitimit (gain) vërteton hipotezën e projektit tonë: ndërkohë që inercia kohore (`lag`) vendos bazën, **temperatura** dhe **prodhimi i energjisë** renditen menjëherë pas saj si faktorët e jashtëm me ndikimin më të lartë në luhatjen e cilësisë së ajrit.
+
+![Feature Importance](src/lightgbm_model/improved_model/feature_importance.png)
+
+**Parashikimi vs Realiteti:**
+Grafiku tregon se modeli i përmirësuar dinamik arrin të ndjekë me saktësi pikat ekstreme (peaks) të ndotjes gjatë kombinimit të prodhimit të lartë me kushtet atmosferike jo të favorshme.
+
+![Actual vs Predicted](src/lightgbm_model/improved_model/actual_vs_predicted.png)
+
+#### Konkluzioni
+Ky eksperiment vërteton se ndikimi i termocentraleve dhe motit në Prishtinë është shumë domethënës, por efekti i tyre i vërtetë mund të matet dhe parashikohet saktë vetëm kur modeli merr parasysh natyrën akumuluese të smogut në atmosferë. 
+
+#### Artifaktet e gjeneruara
+* `baseline_model.joblib` / `improved_model.joblib`: Modelet e ruajtura.
+* `metrics_summary.txt`: Përmbledhja e metrikave (MAE, RMSE, R²).
+* `feature_importance.csv` dhe `feature_importance.png`: Pesha e saktë e ndikimit për çdo variabël.
+* `actual_vs_predicted.png`: Grafiku kohor i përputhshmërisë mes parashikimit të modelit dhe ndotjes reale.
+* `learning_curve.png`: Kurba e rënies së gabimit gjatë procesit të trajnimit të modelit.
+---
+
 ### HDBSCAN për analizë unsupervised
 
 Për analizën unsupervised është përdorur `HDBSCAN`, një algoritëm clustering i bazuar në densitet, i cili nuk kërkon përcaktim paraprak të numrit të cluster-ëve dhe është shumë i përshtatshëm për të dhëna reale me shape të parregullt, densitete të ndryshme dhe presence të outlier-ave.
