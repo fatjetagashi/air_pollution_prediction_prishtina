@@ -1,0 +1,12 @@
+Skenari: Baseline Model
+=====================================
+R²: 0.1944
+RMSE:     5.9440 µg/m³
+MAE:      4.1805 µg/m³
+
+Top 5 veçoritë më të rëndësishme:
+- temperature_2m (°C): 22.00%
+- hour_sin: 13.09%
+- total_generation_mw: 9.86%
+- relative_humidity_2m (%): 9.54%
+- wind_speed_10m (km/h): 8.84%
