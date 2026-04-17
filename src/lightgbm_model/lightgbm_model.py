@@ -19,7 +19,7 @@ BASE_DIR = CURRENT_DIR.parent.parent
 INPUT_PATH = BASE_DIR / "data" / "4E_selected_dataset.csv"
 SCALER_PATH = BASE_DIR / "models" / "scaler.pkl"
 
-INCLUDE_ADDITIONAL_FEATURES = False
+INCLUDE_ADDITIONAL_FEATURES = True
 SCENARIO_NAME = "improved_model" if INCLUDE_ADDITIONAL_FEATURES else "baseline_model"
 OUTPUT_DIR = CURRENT_DIR / SCENARIO_NAME
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
