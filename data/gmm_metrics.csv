@@ -1,0 +1,2 @@
+rows_used,n_features,pca_components,pca_explained_variance,n_clusters,covariance_type,bic,aic,silhouette_score,davies_bouldin_score,calinski_harabasz_score,min_cluster_ratio,max_cluster_ratio,avg_cluster_confidence
+9347,12,9,0.9712209980293672,6,full,154996.08061678734,152646.09589149227,0.08989253897548097,2.075104300055048,950.0418340607679,0.11276345351449663,0.26789344174601476,0.9687868499792431

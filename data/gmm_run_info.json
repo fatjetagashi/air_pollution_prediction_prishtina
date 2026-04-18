@@ -1,0 +1,52 @@
+{
+  "input_path": "C:\\Users\\Fatjeta\\PycharmProjects\\air_pollution_prediction_prishtina\\data\\phase_1\\4E_selected_dataset.csv",
+  "model_path": "C:\\Users\\Fatjeta\\PycharmProjects\\air_pollution_prediction_prishtina\\models\\gaussian_mixture_model\\gmm_model.pkl",
+  "scaler_path": "C:\\Users\\Fatjeta\\PycharmProjects\\air_pollution_prediction_prishtina\\models\\gaussian_mixture_model\\gmm_scaler.pkl",
+  "pca_path": "C:\\Users\\Fatjeta\\PycharmProjects\\air_pollution_prediction_prishtina\\models\\gaussian_mixture_model\\gmm_pca.pkl",
+  "feature_columns_path": "C:\\Users\\Fatjeta\\PycharmProjects\\air_pollution_prediction_prishtina\\models\\gaussian_mixture_model\\gmm_feature_columns.pkl",
+  "outputs": {
+    "clustered_dataset": "C:\\Users\\Fatjeta\\PycharmProjects\\air_pollution_prediction_prishtina\\data\\gmm_clustered_dataset.csv",
+    "metrics": "C:\\Users\\Fatjeta\\PycharmProjects\\air_pollution_prediction_prishtina\\data\\gmm_metrics.csv",
+    "cluster_summary": "C:\\Users\\Fatjeta\\PycharmProjects\\air_pollution_prediction_prishtina\\data\\gmm_cluster_summary.csv",
+    "feature_summary": "C:\\Users\\Fatjeta\\PycharmProjects\\air_pollution_prediction_prishtina\\data\\gmm_feature_summary.csv",
+    "model_selection": "C:\\Users\\Fatjeta\\PycharmProjects\\air_pollution_prediction_prishtina\\data\\gmm_model_selection.csv",
+    "interactive_plot": "C:\\Users\\Fatjeta\\PycharmProjects\\air_pollution_prediction_prishtina\\pictures\\gaussian_mixture_model\\gmm_pca_interactive.html",
+    "cluster_profile_heatmap": "C:\\Users\\Fatjeta\\PycharmProjects\\air_pollution_prediction_prishtina\\pictures\\gaussian_mixture_model\\gmm_cluster_profile_heatmap.png",
+    "model_selection_plot": "C:\\Users\\Fatjeta\\PycharmProjects\\air_pollution_prediction_prishtina\\pictures\\gaussian_mixture_model\\gmm_model_selection.png"
+  },
+  "config": {
+    "pca_variance_threshold": 0.95,
+    "n_component_candidates": [
+      2,
+      3,
+      4,
+      5,
+      6
+    ],
+    "covariance_types": [
+      "full",
+      "diag",
+      "tied"
+    ],
+    "n_init": 10,
+    "min_cluster_ratio": 0.05
+  },
+  "selected_model": {
+    "n_components": 6,
+    "covariance_type": "full"
+  },
+  "feature_columns": [
+    "hour_sin",
+    "hour_cos",
+    "month_sin",
+    "month_cos",
+    "pollution_stagnation_index",
+    "wind_x_vector",
+    "wind_y_vector",
+    "total_generation_mw",
+    "temperature_2m (\u00b0C)",
+    "rain (mm)",
+    "relative_humidity_2m (%)",
+    "wind_speed_10m (km/h)"
+  ]
+}
