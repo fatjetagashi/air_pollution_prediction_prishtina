@@ -372,10 +372,26 @@ Rrjedha logjike është kjo:
 ### Përshkrimi i detajuar i çdo skripte
 
 ### App.py - Dashboard
+-### App.py - Dashboard
 
-- Ky projekt përfshin gjithashtu një dashboard interaktiv të ndërtuar me Streamlit, i cili shërben si një simulator vizual për eksplorimin në kohë reale të ndikimit që kanë prodhimi i termocentraleve dhe kushtet meteorologjike në ndotjen e ajrit në Prishtinë. Përmes këtij vizualizimi, përdoruesi mund të ndryshojë në mënyrë dinamike parametrat e prodhimit energjetik, temperaturës, reshjeve, lagështisë dhe erës, dhe të vëzhgojë menjëherë se si këto ndryshime reflektohen në nivelet e ndotësve kryesorë atmosferikë, veçanërisht te PM2.5. Dashboard-i është konceptuar si një komponent interaktiv dhe intuitiv që e bën analizën më të kuptueshme, më eksploruese dhe më afër një skenari simulues të botës reale.
+Ky projekt përfshin gjithashtu një dashboard interaktiv të ndërtuar me Streamlit, i cili fillimisht është konceptuar si një simulator vizual për eksplorimin në kohë reale të ndikimit që kanë prodhimi i termocentraleve dhe kushtet meteorologjike në ndotjen e ajrit në Prishtinë. Përmes këtij vizualizimi, përdoruesi mund të ndryshojë në mënyrë dinamike parametrat e prodhimit energjetik, temperaturës, reshjeve, lagështisë dhe erës, dhe të vëzhgojë menjëherë se si këto ndryshime reflektohen në nivelet e ndotësve kryesorë atmosferikë, veçanërisht te PM2.5. Dashboard-i është konceptuar si një komponent interaktiv dhe intuitiv që e bën analizën më të kuptueshme, më eksploruese dhe më afër një skenari simulues të botës reale.
 
-<img width="1403" height="614" alt="image" src="https://github.com/user-attachments/assets/72f790b1-7253-4fe9-ab3d-f89834b609e3" />
+Në fazën e dytë, dashboard-i është zgjeruar nga një demonstrim vizual i thjeshtë në një mjedis më të avancuar analitik, i lidhur drejtpërdrejt me modelet e zhvilluara në projekt. Përveç eksplorimit të të dhënave historike, aplikacioni tani synon të ofrojë edhe parashikim të niveleve të ardhshme të PM2.5, duke përdorur modelin më të përshtatshëm të trajnuar mbi dataset-in final të përpunuar. Kjo e transformon dashboard-in nga një mjet vetëm demonstrues në një platformë më të plotë për simulim, interpretim dhe forecast.
+
+Në këtë version të zgjeruar, dashboard-i pasqyron edhe rezultatet e gjashtë modeleve kryesore të përdorura në fazën e dytë të projektit. Tre prej tyre janë modele supervised për parashikimin e PM2.5: **CatBoost**, **LightGBM** dhe **SARIMAX**. CatBoost dhe LightGBM janë përdorur për të mësuar lidhjet jo-lineare ndërmjet prodhimit energjetik, kushteve meteorologjike dhe ndotjes së ajrit, ndërsa SARIMAX është përdorur si model kohor statistikor për të kapur trendin, sezonalitetin dhe ndikimin e variablave të jashtëm në seri kohore. Këto modele janë krahasuar për të identifikuar qasjen më efektive për parashikim.
+
+Përveç modeleve supervised, dashboard-i integrohet konceptualisht edhe me tre modele unsupervised: **HDBSCAN**, **Gaussian Mixture Model (GMM)** dhe **Isolation Forest**. Këto modele nuk janë përdorur për forecast direkt, por për të analizuar strukturën e të dhënave, për të identifikuar grupe sjelljesh të ngjashme, regjime të ndryshme të ndotjes dhe raste anomale ose ekstreme në dataset. Në këtë mënyrë, pjesa unsupervised e pasuron interpretimin e të dhënave dhe ndihmon në kuptimin më të thellë të pattern-eve që nuk shihen menjëherë vetëm nga grafikat klasike.
+
+Si rezultat, dashboard-i nuk shërben më vetëm si një panel interaktiv për ndryshimin manual të parametrave, por si një pikë e përbashkët ku bashkohen vizualizimi, simulimi, krahasimi i modeleve dhe interpretimi i rezultateve. Kjo e bën aplikacionin një komponent të rëndësishëm të projektit, sepse lidh në mënyrë praktike të dhënat, modelet machine learning dhe analizën eksploruese në një ndërfaqe të vetme dhe të kuptueshme për përdoruesin.
+
+<img width="1920" height="901" alt="image" src="https://github.com/user-attachments/assets/66cd2439-bb97-440b-baf5-5ec97bbc7aee" />
+<img width="954" height="451" alt="image" src="https://github.com/user-attachments/assets/108326b0-a581-4491-972a-4fb8c3f6aedc" />
+<img width="958" height="448" alt="{39B7F118-D825-4E3C-94A7-73B1600AE34F}" src="https://github.com/user-attachments/assets/50fb329f-fafe-4573-81de-e3a17e06ae05" />
+<img width="959" height="474" alt="{C69C8447-CABA-4644-B13C-6B22E50C8374}" src="https://github.com/user-attachments/assets/62bc85f7-544e-49f2-85ac-c864c3143746" />
+<img width="958" height="472" alt="{83EC6A35-6FE5-4103-9C78-1DFBB82FD6EF}" src="https://github.com/user-attachments/assets/8237cfd0-2672-4f91-a1f1-a7b556b66237" />
+<img width="958" height="451" alt="{4B83DF69-60B7-4F85-B0DB-46FC1EDD743D}" src="https://github.com/user-attachments/assets/238d6ae6-5986-4e17-9b7f-b3abdbcaf4f8" />
+<img width="957" height="478" alt="{B50EBF5D-65EE-4730-BE13-D8C2F21334DA}" src="https://github.com/user-attachments/assets/f21634cc-099a-4ef2-8341-891684b80d7d" />
+
 
 ### Data collection
 
