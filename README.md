@@ -53,6 +53,7 @@
    - [SARIMAX për parashikimin e PM2.5](#sarimax-për-parashikimin-e-pm25)
    - [HDBSCAN për analizë unsupervised](#hdbscan-për-analizë-unsupervised)
    - [Gaussian Mixture për analizë unsupervised](#gaussian-mixture-për-analizë-unsupervised)
+   - [Isolation Forest për analizë unsupervised](#isolation-forest-për-analizë-unsupervised)
    - [Validimi korrekt pa leakage](#validimi-korrekt-pa-leakage)
    - [Metrikat dhe interpretimi i rezultateve](#metrikat-dhe-interpretimi-i-rezultateve)
    - [Artefaktet e krijuara nga modelet](#artefaktet-e-krijuara-nga-modelet)
@@ -91,6 +92,7 @@
    - SARIMAX për parashikimin e PM2.5
    - HDBSCAN për analizë unsupervised
    - Gaussian Mixture për analizë unsupervised
+   - Isolation Forest për analizë unsupervised
    - Validimi korrekt pa leakage
    - Metrikat dhe interpretimi i rezultateve
    - Artefaktet e krijuara nga modelet
@@ -2569,6 +2571,55 @@ Skripta ruan këto output-e:
 - `pictures/gaussian_mixture_model/gmm_model_selection.png`
 - `pictures/gaussian_mixture_model/gmm_cluster_profile_heatmap.png`
 - `pictures/gaussian_mixture_model/gmm_pca_interactive.html`
+
+---
+
+### Isolation Forest për analizë unsupervised
+
+#### Pse Isolation Forest?
+Ndryshe nga modelet e tjera që përpiqen të mësojnë se çfarë është "normale", ky algoritëm izolon drejtpërdrejt pikat që sillen në mënyrë të pazakontë (anomalitë). Modeli nuk kërkon thjesht vlera ekstreme (p.sh. ajër shumë i ndotur), por gjen situata ku variablat nuk përputhen logjikisht me njëra-tjetrën (p.sh. ndotje e ulët kur prodhimi i energjisë është i lartë).
+
+#### Identifikimi i goditjeve kohore (Zoom-in Analysis)
+Për të kuptuar saktësinë e modelit, kemi zmadhuar dritaren kohore në periudhën kritike Nëntor–Dhjetor 2025.
+
+![Isolation Forest Zoom-in PM2.5](src/phase_2/isolation_forest_model/isolation_forest_results/isolation_forest_pm25_zoom.png)
+
+Konstatimi: Siç shihet nga pikat e kuqe, modeli nuk gjeneron alarme të rreme gjatë luhatjeve të zakonshme. Ai shënjestron me saktësi vetëm momentet (peaks) kur niveli i PM2.5 del plotësisht jashtë kontrollit apo ritmit sezonal.
+
+#### Korrelacioni vizual: Ndotja vs. Energjia (Scatter Plot)
+Ky grafik ballafaqon prodhimin total të energjisë (MW) me nivelet e PM2.5 për të parë se ku "thyhet" normaliteti.
+
+![Isolation Forest Energy vs PM2.5 Scatter](src/phase_2/isolation_forest_model/isolation_forest_results/isolation_forest_scatter.png)
+
+Interpretimi i shpërndarjes:
+
+Reja e pikave gri (Normaliteti): Përfaqëson 95% të ditëve ku prodhimi dhe ndotja ndjekin një trend të parashikueshëm.
+
+Korniza e kuqe (Anomalitë): Anomalitë grumbullohen në skajet ekstreme. Vlen të theksohet se pikat në pjesën e poshtme djathtas (prodhim i lartë, ndotje e ulët) janë lënë si gri nga modeli kur të dhënat e motit kanë treguar prani të erës apo shiut, duke vërtetuar se modeli kupton kontekstin meteorologjik.
+
+#### Skenarët kryesorë të zbuluar
+Nga analiza e 100 anomalive më ekstreme, veçuam dy raste që vërtetojnë lidhjen mes energjisë dhe mjedisit:
+
+"Mrekullia e 27 Nëntorit" (Anomalia e ajrit të pastër):
+Modeli kapi një moment ku KEK-u po punonte me kapacitet maksimal dimëror, por ndotja ishte pothuajse zero. Kjo u izolua si anomali pasi theu lidhjen logjike prodhim-ndotje; shpjegimi fizik ishte prania e një stuhie që pastroi ajrin pavarësisht emetimeve.
+
+"Ndotja e Natës" (2 Prill 2024, ora 04:00):
+Në një kohë kur trafiku i qytetit është zero, modeli zbuloi një rritje të papritur të PM2.5. Duke parë variablat e energjisë, u vërtetua se fiks në atë orë prodhimi ishte në mbingarkesë, duke bërë lidhjen direkte mes punës së termocentraleve dhe smogut nocturn.
+
+#### Konkluzioni
+Ndërkohë që algoritmet supervised si LightGBM parashikojnë trendin e përgjithshëm, Isolation Forest shërben si një "radar" për të identifikuar dështimet e sistemit dhe goditjet mjedisore. Ky model vërteton se ndikimi i energjisë në ajër është i pranishëm, por mund të modifikohet drastikisht nga kushtet atmosferike.
+
+Artifaktet e gjeneruara
+
+![Isolation Forest PM2.5 Trend](src/phase_2/isolation_forest_model/isolation_forest_results/isolation_forest_pm25.png)
+
+![Isolation Forest Energy Trend](src/phase_2/isolation_forest_model/isolation_forest_results/isolation_forest_energy.png)
+
+- `isolation_forest_pm25_zoom.png`: Pamja e zmadhuar e anomalive (Nëntor–Dhjetor 2025).
+- `isolation_forest_scatter.png`: Grafiku i korrelacionit (Normaliteti vs. Anomalitë).
+- `isolation_forest_pm25.png`: Ecuria e plotë 3-vjeçare e anomalive për PM2.5.
+- `isolation_forest_energy.png`: Ecuria e plotë 3-vjeçare e prodhimit energjetik.
+- `top_anomalies_list.csv`: Regjistri i 100 rasteve më anormale për analizë të detajuar.
 
 ---
 
