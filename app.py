@@ -16,7 +16,11 @@ st.set_page_config(
 )
 
 BASE_DIR = Path(__file__).resolve().parent
-DATA_PATH = BASE_DIR / "data" / "2D_validated_final_dataset.csv"
+DATA_CANDIDATES = [
+    BASE_DIR / "data" / "2D_validated_final_dataset.csv",
+    BASE_DIR / "data" / "phase_1" / "2D_validated_final_dataset.csv",
+]
+DATA_PATH = next((path for path in DATA_CANDIDATES if path.exists()), DATA_CANDIDATES[-1])
 
 POLLUTANTS = ["co", "no2", "o3", "pm10", "pm25", "so2"]
 
@@ -625,7 +629,8 @@ st.caption(
 if not DATA_PATH.exists():
     st.error(
         f"Nuk u gjet dataset-i te kjo rrugë: {DATA_PATH}\n\n"
-        "Vendose `app.py` në root të projektit dhe sigurohu që ekziston `data/2D_validated_final_dataset.csv`."
+        "Vendose `app.py` në root të projektit dhe sigurohu që ekziston "
+        "`data/phase_1/2D_validated_final_dataset.csv`."
     )
     st.stop()
 

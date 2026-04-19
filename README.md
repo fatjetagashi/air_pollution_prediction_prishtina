@@ -28,10 +28,10 @@
 
 1. [Përmbledhje e projektit](#përmbledhje-e-projektit)
 2. [Qëllimi i punimit](#qëllimi-i-punimit)
-3. [01 Përgatitja e modelit](#01-përgatitja-e-modelit)
+3. [Struktura e repository-t](#struktura-e-repository-t)
+4. [01 Përgatitja e modelit](#01-përgatitja-e-modelit)
    - [Burimet e të dhënave](#burimet-e-të-dhënave)
    - [Përshkrimi i dataset-eve hyrëse](#përshkrimi-i-dataset-eve-hyrëse)
-   - [Struktura e repository-t](#struktura-e-repository-t)
    - [Topologjia e pipeline-it](#topologjia-e-pipeline-it)
    - [Përshkrimi i detajuar i çdo skripte](#përshkrimi-i-detajuar-i-çdo-skripte)
      - [Data collection](#data-collection)
@@ -46,60 +46,24 @@
    - [Ekzekutimi i projektit](#ekzekutimi-i-projektit)
    - [Rezultati final i pipeline-it](#rezultati-final-i-pipeline-it)
    - [Zgjerime në vazhdim](#zgjerime-në-vazhdim)
-4. [02 Modelimi dhe analiza](#02-modelimi-dhe-analiza)
+5. [02 Modelimi dhe analiza](#02-modelimi-dhe-analiza)
    - [Qasja e përgjithshme](#qasja-e-përgjithshme)
+   - [Krahasimi i harmonizuar i modeleve](#krahasimi-i-harmonizuar-i-modeleve)
+   - [Rezultatet kryesore të fazës së dytë](#rezultatet-kryesore-të-fazës-së-dytë)
    - [CatBoost për parashikimin e PM2.5](#catboost-për-parashikimin-e-pm25)
    - [LightGBM për parashikimin e PM2.5](#lightgbm-për-parashikimin-e-pm25)
    - [SARIMAX për parashikimin e PM2.5](#sarimax-për-parashikimin-e-pm25)
    - [HDBSCAN për analizë unsupervised](#hdbscan-për-analizë-unsupervised)
    - [Gaussian Mixture për analizë unsupervised](#gaussian-mixture-për-analizë-unsupervised)
    - [Isolation Forest për analizë unsupervised](#isolation-forest-për-analizë-unsupervised)
-   - [Validimi korrekt pa leakage](#validimi-korrekt-pa-leakage)
+   - [Ekzekutimi i fazës së dytë](#ekzekutimi-i-fazës-së-dytë)
    - [Metrikat dhe interpretimi i rezultateve](#metrikat-dhe-interpretimi-i-rezultateve)
    - [Artefaktet e krijuara nga modelet](#artefaktet-e-krijuara-nga-modelet)
    - [Vizualizimet interaktive](#vizualizimet-interaktive)
-5. [Zgjerime në vazhdim](#zgjerime-në-vazhdim)
-6. [Anëtarët e grupit](#anëtarët-e-grupit)
-7. [Acknowledgments](#acknowledgments)
-
----
-
-## Përmbajtja
-
-1. Përmbledhje e projektit
-2. Qëllimi i punimit
-3. 01 Përgatitja e modelit
-   - Burimet e të dhënave
-   - Përshkrimi i dataset-eve hyrëse
-   - Struktura e repository-t
-   - Topologjia e pipeline-it
-   - Përshkrimi i detajuar i çdo skripte
-     - Data collection
-     - Integration
-     - Distinct values
-     - Data cleaning
-     - Feature engineering
-     - Preprocessing
-   - Artefaktet dhe output-et e krijuara
-   - Vizualizimet e gjeneruara
-   - Teknikat e zbatuara dhe lidhja me lëndën
-   - Ekzekutimi i projektit
-   - Rezultati final i pipeline-it
-4. 02 Modelimi dhe analiza
-   - Qasja e përgjithshme
-   - CatBoost për parashikimin e PM2.5
-   - LightGBM për parashikimin e PM2.5
-   - SARIMAX për parashikimin e PM2.5
-   - HDBSCAN për analizë unsupervised
-   - Gaussian Mixture për analizë unsupervised
-   - Isolation Forest për analizë unsupervised
-   - Validimi korrekt pa leakage
-   - Metrikat dhe interpretimi i rezultateve
-   - Artefaktet e krijuara nga modelet
-   - Vizualizimet interaktive
-5. Zgjerime në vazhdim
-6. Anëtarët e grupit
-7. Acknowledgments
+   - [Rezultati i zgjeruar i pipeline-it](#rezultati-i-zgjeruar-i-pipeline-it)
+6. [Zgjerime në vazhdim](#zgjerime-në-vazhdim)
+7. [Anëtarët e grupit](#anëtarët-e-grupit)
+8. [Acknowledgments](#acknowledgments)
 
 ---
 
@@ -126,7 +90,7 @@ Më pas, këto burime:
 
 Ky projekt demonstron të gjithë ciklin e përgatitjes së të dhënave: nga kolektimi, integrimi dhe kontrolli i cilësisë, deri te feature engineering, transformimi statistikor dhe feature selection.
 
-Në fazën e dytë, dataset-i final `4E_selected_dataset.csv` është përdorur edhe për modelim dhe analizë eksploruese të avancuar. Konkretisht, janë implementuar tre modele supervised (`CatBoostRegressor`, `LightGBM`, `SARIMAX`) për parashikimin e `PM2.5`, si dhe dy modele unsupervised (`HDBSCAN` dhe `Gaussian Mixture`) për identifikimin e strukturave natyrore, cluster-ëve, regjimeve mjedisore dhe outlier-ave në të dhënat e përgatitura. Kjo e zgjeron projektin nga një pipeline i përgatitjes së të dhënave në një workflow të plotë analitik dhe modelues.
+Në fazën e dytë, dataset-i final `data/phase_1/4E_selected_dataset.csv` është përdorur për modelim, krahasim dhe interpretim të avancuar. Konkretisht, janë implementuar tre modele supervised (`CatBoostRegressor`, `LightGBM`, `SARIMAX`) për parashikimin e `PM2.5`, si dhe tre modele unsupervised (`HDBSCAN`, `Gaussian Mixture`, `Isolation Forest`) për identifikimin e regjimeve mjedisore, cluster-ëve, noise points dhe anomalive. Për më tepër, rezultatet e të gjitha modeleve janë harmonizuar në `data/phase_2/` dhe `pictures/phase_2/`, në mënyrë që krahasimi dhe dokumentimi të jenë sa më të qarta dhe të riprodhueshme.
 
 ---
 
@@ -140,6 +104,13 @@ Qëllimi kryesor i këtij projekti është të ndërtojë një dataset të past�
 
 me fokus të veçantë në përdorimin e këtyre të dhënave për parashikimin e `PM2.5`.
 
+Nga pikëpamja akademike, projekti është ndërtuar në dy shtresa të lidhura ngushtë:
+
+- **faza e parë**, ku ndërtohet dataset-i final i pastër dhe model-ready;
+- **faza e dytë**, ku testohet vlera reale e këtij dataset-i për regresion, clustering dhe anomaly detection.
+
+Një komponent plotësues i rëndësishëm është edhe `app.py`, i cili shërben si dashboard interaktiv dhe e bën më të lehtë demonstrimin vizual të ndikimit të energjisë dhe motit në ndotjen e ajrit.
+
 Objektivat kryesore janë:
 
 - të integrohen burime heterogjene të të dhënave në një bosht të përbashkët kohor;
@@ -148,9 +119,75 @@ Objektivat kryesore janë:
 - të krijohen tipare të reja kohore, meteorologjike dhe ndërvepruese;
 - të zbutet ndikimi i outlier-ave dhe shpërndarjeve shumë të shtrembëruara;
 - të standardizohet dataset-i për përdorim në modele statistikore dhe machine learning;
-- të eliminohet multikolineariteti i tepërt përmes VIF-based feature selection.
+- të eliminohet multikolineariteti i tepërt përmes VIF-based feature selection;
 - të përdoret dataset-i final i përzgjedhur për ndërtimin dhe validimin e modeleve supervised për parashikimin e `PM2.5`;
-- të analizohet struktura e brendshme e të dhënave përmes metodave unsupervised clustering, me qëllim identifikimin e regjimeve të ndryshme të ndotjes dhe kushteve atmosferike.
+- të analizohet struktura e brendshme e të dhënave përmes metodave unsupervised clustering dhe anomaly detection;
+- të ndërtohet një dokumentim i plotë, i detajuar dhe profesional për të gjithë ciklin e projektit.
+
+---
+
+## Struktura e repository-t
+
+Struktura aktuale e repository-t është e ndarë qartë sipas fazave të projektit dhe sipas llojit të artefakteve:
+
+```text
+AIR_POLLUTION_PREDICTION_PRISHTINA/
+│
+├── app.py
+├── README.md
+├── test.py
+│
+├── src/
+│   ├── phase_1/
+│   │   ├── data_collection/
+│   │   ├── integration/
+│   │   ├── distinct_values/
+│   │   ├── data_cleaning/
+│   │   ├── feature_engineering/
+│   │   └── preprocessing/
+│   │
+│   └── phase_2/
+│       ├── supervised/
+│       │   ├── catboost_model/
+│       │   ├── lightgbm_model/
+│       │   └── sarimax_model/
+│       ├── unsupervised/
+│       │   ├── gaussian_mixture_model/
+│       │   ├── hdbscan_model/
+│       │   └── isolation_forest_model/
+│       └── comparison/
+│           └── build_phase2_standardized_outputs.py
+│
+├── data/
+│   ├── raw/
+│   ├── phase_1/
+│   └── phase_2/
+│       ├── supervised/
+│       ├── unsupervised/
+│       └── comparison/
+│
+├── models/
+│   ├── scaler.pkl
+│   ├── catboost_model/
+│   ├── gaussian_mixture_model/
+│   ├── hdbscan_model/
+│   ├── isolation_forest_model/
+│   └── sarimax_model/
+│
+└── pictures/
+    ├── phase_1/
+    └── phase_2/
+        ├── supervised/
+        ├── unsupervised/
+        └── comparison/
+```
+
+Kjo strukturë është e favorshme për dokumentim profesional sepse:
+
+- ndan qartë fazën e përgatitjes së të dhënave nga faza e modelimit;
+- mban artefaktet e secilit model në një vend të qëndrueshëm;
+- lejon krahasim më të lehtë mes modeleve supervised dhe unsupervised;
+- dhe e bën repo-n më të pastër për dorëzim, prezantim dhe mirëmbajtje.
 
 ---
 
@@ -284,87 +321,6 @@ Karakteristikat e dataset-it:
 - Numri i kolonave: **7**
 - Numri total i vlerave: **158,067**
 - Intervali kohor: **2023-08-01 → 2026-03-03**
-
----
-
-### Struktura e repository-t
-
-```text
-AIR_POLLUTION_PREDICTION_PRISHTINA/
-│
-├── app.py                       # Vizualizimi i tërë projektit
-│
-├── src/
-│   ├── catboost_model/
-│   │   ├── catboost_info/
-│   │   └── catboost_model.py
-│   │
-│   ├── hdbscan_model/
-│   │   └── hdbscan_model.py
-│   │
-│   ├── data_cleaning/
-│   │   ├── 2A_datetime_and_duplicates.py
-│   │   ├── 2B_data_quality_cleaning.py
-│   │   ├── 2C_missing_values_handling.py
-│   │   └── 2D_validate_final_dataset.py
-│   │
-│   ├── data_collection/
-│   │   ├── get_kosova_air_quality_data.ps1
-│   │   └── get_prishtina_air_quality_data.ipynb
-│   │
-│   ├── distinct_values/
-│   │   └── 1B_distinct_values.py
-│   │
-│   ├── feature_engineering/
-│   │   ├── 3A_target_analysis.py
-│   │   └── 3B_feature_engineering.py
-│   │
-│   ├── integration/
-│   │   └── 1A_merge_data.py
-│   │
-│   └── preprocessing/
-│       ├── 4A_outlier_treatment.py
-│       ├── 4B_skewness_treatment.py
-│       ├── 4C_visualization_before_after.py
-│       ├── 4D_feature_scaling.py
-│       └── 4E_feature_selection.py
-│
-├── data/
-│   ├── raw/
-│   ├── 1B_distinct_values/
-│   ├── 1A_merged_data_hourly_2023_2025.csv
-│   ├── 2A_cleaned_no_duplicates.csv
-│   ├── 2B_quality_checked.csv
-│   ├── 2C_missing_values_handled.csv
-│   ├── 2D_validated_final_dataset.csv
-│   ├── 3B_engineered_dataset.csv
-│   ├── 4A_outliers_handled.csv
-│   ├── 4B_skewness_handled.csv
-│   ├── 4D_scaled_dataset.csv
-│   ├── 4E_selected_dataset.csv
-│   ├── catboost_forecasts.csv
-│   ├── catboost_metrics.csv
-│   ├── catboost_feature_importance.csv
-│   ├── catboost_split_summary.csv
-│   ├── hdbscan_clustered_dataset.csv
-│   ├── hdbscan_metrics.csv
-│   ├── hdbscan_cluster_summary.csv
-│   └── hdbscan_feature_summary.csv
-│
-├── models/
-│   ├── scaler.pkl
-│   ├── catboost_model/
-│   └── hdbscan_model/
-│
-├── pictures/
-│   ├── catboost_model/
-│   └── hdbscan_model/
-│
-├── README.md
-├── test.py
-└── .gitignore
-
-```
 
 ---
 
@@ -1210,7 +1166,7 @@ Në fund raportohet:
 
 ##### Output
 
-- `data/4E_selected_dataset.csv`
+- `data/phase_1/4E_selected_dataset.csv`
 
 <img width="1091" height="703" alt="image" src="https://github.com/user-attachments/assets/66b3f216-ac68-45de-915e-7c55089049b7" />
 
@@ -1448,7 +1404,7 @@ Produkti final i këtij projekti është:
 
 Dataset-i final:
 
-- `data/4E_selected_dataset.csv`
+- `data/phase_1/4E_selected_dataset.csv`
 
 është forma më e përshtatshme për:
 
@@ -1461,12 +1417,12 @@ Dataset-i final:
 
 ## 02 Modelimi dhe analiza
 
-Pas përfundimit të pipeline-it të përgatitjes së të dhënave, dataset-i final `data/4E_selected_dataset.csv` është përdorur si hyrje për një fazë të dytë të projektit, e fokusuar në modelim dhe analizë të avancuar. Kjo fazë e zgjeron projektin nga një pipeline i pastrimit dhe përgatitjes së të dhënave në një workflow të plotë të machine learning dhe data analysis.
+Pas përfundimit të pipeline-it të përgatitjes së të dhënave, dataset-i final `data/phase_1/4E_selected_dataset.csv` është përdorur si hyrje për një fazë të dytë të projektit, e fokusuar në modelim dhe analizë të avancuar. Kjo fazë e zgjeron projektin nga një pipeline i pastrimit dhe përgatitjes së të dhënave në një workflow të plotë të machine learning dhe data analysis.
 
 Në këtë fazë janë zhvilluar disa qasje komplementare:
 
 - qasje **supervised**, për parashikimin e `PM2.5` me `CatBoostRegressor`, `LightGBM` dhe `SARIMAX`;
-- qasje **unsupervised**, për analizimin e strukturës së brendshme të të dhënave me `HDBSCAN` dhe `Gaussian Mixture`.
+- qasje **unsupervised**, për analizimin e strukturës së brendshme të të dhënave me `HDBSCAN`, `Gaussian Mixture` dhe `Isolation Forest`.
 
 Qëllimi i kësaj pjese nuk është vetëm ndërtimi i modeleve, por edhe demonstrimi që dataset-i final i krijuar nga pipeline-i është realisht i përdorshëm për:
 
@@ -1483,7 +1439,7 @@ Faza e modelimit është ndërtuar mbi parimet e mëposhtme:
 
 1. **Përdorim i dataset-it final të selektuar**
    - Input kryesor për modelet është:
-     - `data/4E_selected_dataset.csv`
+     - `data/phase_1/4E_selected_dataset.csv`
 
 2. **Ruajtje e rendit kronologjik**
    - Për modelin supervised, ndarja e të dhënave është bërë sipas kohës dhe jo rastësisht, për të shmangur leakage dhe për të simuluar më mirë një skenar real parashikimi.
@@ -1492,7 +1448,85 @@ Faza e modelimit është ndërtuar mbi parimet e mëposhtme:
    - Dataset-i final tashmë përmban një përzgjedhje tiparesh të reduktuara përmes preprocessing dhe VIF-based feature selection, prandaj është përdorur drejtpërdrejt si bazë për modelim.
 
 4. **Ruajtje e artefakteve**
-   - Çdo model ruan output-et e veta në `data/`, `models/` dhe `pictures/`, në mënyrë që rezultatet të jenë të gjurmueshme dhe të riprodhueshme.
+   - Çdo model ruan output-et e veta në `data/phase_2/`, `models/` dhe `pictures/phase_2/`, në mënyrë që rezultatet të jenë të gjurmueshme dhe të riprodhueshme.
+
+5. **Harmonizim për krahasim**
+   - Përtej output-eve native të modeleve, është ndërtuar edhe një shtresë standardizimi me `src/phase_2/comparison/build_phase2_standardized_outputs.py`, e cila mbledh metrikat, figurat dhe tabelat krahasuese në një strukturë të përbashkët për dokumentim.
+
+---
+
+### Krahasimi i harmonizuar i modeleve
+
+Për të pasur krahasim sa më të qartë dhe sa më profesional, output-et e fazës së dytë janë harmonizuar në dy familje:
+
+- **supervised**, ku modelet krahasohen sipas `MAE`, `RMSE`, `R²`, dhe aty ku ekzistojnë edhe `MAPE` dhe `SMAPE`;
+- **unsupervised**, ku modelet krahasohen sipas numrit të grupeve kryesore, raportit të pikave speciale (`noise` ose `anomaly ratio`), si dhe metrikave të brendshme të clustering-ut kur këto janë të aplikueshme.
+
+Ky harmonizim është shumë i rëndësishëm akademikisht, sepse:
+
+- shmang krahasimet e paqarta mes output-eve heterogjene;
+- bën të mundur dokumentimin paralel të modeleve të ndryshme;
+- dhe lejon interpretim më të drejtë të rolit të secilit algoritëm brenda projektit.
+
+Figura e mëposhtme përmbledh krahasimin standard të modeleve supervised:
+
+![Supervised Comparison Table](pictures/phase_2/comparison/supervised_comparison_table.png)
+
+Kjo figurë tregon në një tabelë të vetme strategjinë e evaluimit dhe metrikat kryesore për `LightGBM`, `CatBoost` dhe `SARIMAX`. Ajo e bën të qartë që jo të gjitha modelet janë testuar me të njëjtën strategji vlerësimi, prandaj interpretimi duhet bërë me kujdes.
+
+Për supervised, është gjeneruar edhe paneli i përbashkët i tipareve më të rëndësishme:
+
+![Supervised Feature Panels](pictures/phase_2/comparison/supervised_feature_panels.png)
+
+Ky panel ndihmon në krahasimin e tre logjikave të ndryshme të interpretimit:
+
+- `feature importance` për modelet boosting;
+- koeficientët për `SARIMAX`;
+- dhe rolin e tipareve energjetike, meteorologjike dhe kohore në të tre qasjet.
+
+Për unsupervised, tabela e harmonizuar është kjo:
+
+![Unsupervised Comparison Table](pictures/phase_2/comparison/unsupervised_comparison_table.png)
+
+Kjo figurë vendos në të njëjtin kornizë `HDBSCAN`, `Gaussian Mixture` dhe `Isolation Forest`, duke i interpretuar sipas natyrës së tyre: clustering për dy të parat dhe anomaly detection për të fundit.
+
+Për profilin e `PM2.5` në secilin model unsupervised është gjeneruar edhe figura:
+
+![Unsupervised PM25 Profiles](pictures/phase_2/comparison/unsupervised_pm25_profiles.png)
+
+Kjo figurë ndihmon shumë në raport, sepse e bën të dukshme si ndryshon niveli mesatar i `PM2.5` ndërmjet cluster-ëve apo ndërmjet grupeve `Normal/Anomaly`.
+
+---
+
+### Rezultatet kryesore të fazës së dytë
+
+#### Rezultatet supervised
+
+| Modeli | Strategjia e evaluimit | MAE | RMSE | R² | MAPE (%) | SMAPE (%) |
+|---|---|---:|---:|---:|---:|---:|
+| LightGBM Improved | TimeSeriesSplit CV mean | 2.0827 | 3.2537 | 0.7454 | N/A | N/A |
+| CatBoost | Chronological holdout test | 2.6918 | 4.3210 | 0.8147 | 23.4860 | 21.5382 |
+| SARIMAX | Chronological holdout test | 3.1125 | 4.7654 | 0.7748 | 28.0101 | 25.4697 |
+
+Interpretimi i drejtë i kësaj tabele është:
+
+- `CatBoost` ka performancën më të fortë në holdout test sipas `R²`;
+- `LightGBM` ka gabimet mesatare më të ulëta në `TimeSeriesSplit CV`, por kjo nuk është plotësisht e krahasueshme një-me-një me holdout test;
+- `SARIMAX` mbetet modeli më i interpretueshëm statistikisht dhe njëkohësisht jep performancë solide në test set.
+
+#### Rezultatet unsupervised
+
+| Modeli | Lloji | Rows | Feature-a | Grupet kryesore | Noise / Anomaly Ratio | Avg. Confidence / Severity | Silhouette | Davies-Bouldin | Calinski-Harabasz |
+|---|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| HDBSCAN | Clustering | 9347 | 14 | 2 | 0.7354 | 0.9882 | 0.2658 | 1.2785 | 266.1120 |
+| Gaussian Mixture | Clustering | 9347 | 12 | 6 | 0.0000 | 0.9688 | 0.0899 | 2.0751 | 950.0418 |
+| Isolation Forest | Anomaly Detection | 9347 | 13 | 2 | 0.0501 | 0.0267 | N/A | N/A | N/A |
+
+Interpretimi akademik i rezultateve unsupervised është:
+
+- `HDBSCAN` ofron ndarje më të fortë mes cluster-ëve bazë, por me shumë pika të klasifikuara si `noise`, gjë që është normale për një metodë density-based konservative;
+- `Gaussian Mixture` prodhon një ndarje më të imët në 6 regjime dhe është shumë i vlefshëm për interpretim probabilistik të profileve mjedisore;
+- `Isolation Forest` nuk është model clustering, prandaj nuk krahasohet me `silhouette` ose `Davies-Bouldin`, por me cilësinë e zbulimit të anomalive dhe interpretimin e rasteve të veçanta.
 
 ---
 
@@ -1511,7 +1545,7 @@ Ky model është zgjedhur sepse:
 
 Modeli lexon dataset-in final:
 
-- `data/4E_selected_dataset.csv`
+- `data/phase_1/4E_selected_dataset.csv`
 
 dhe identifikon kolonën kohore (`datetime` ose `date`) për të ruajtur renditjen kronologjike të vëzhgimeve.
 
@@ -1549,17 +1583,21 @@ Në ekzekutimin aktual, modeli ka përdorur këto feature-a:
 #### Fragment kyç i kodit: konfigurimi i hyrjes
 
 ```python
-BASE_DIR = Path(__file__).resolve().parent.parent.parent
+BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent.parent
 
-INPUT_PATH = BASE_DIR / "data" / "4E_selected_dataset.csv"
+INPUT_CANDIDATES = [
+    BASE_DIR / "data" / "4E_selected_dataset.csv",
+    BASE_DIR / "data" / "phase_1" / "4E_selected_dataset.csv",
+]
 
 MODEL_DIR = BASE_DIR / "models" / "catboost_model"
-PLOTS_DIR = BASE_DIR / "pictures" / "catboost_model"
+PLOTS_DIR = BASE_DIR / "pictures" / "phase_2" / "supervised" / "catboost"
+PHASE2_DATA_DIR = BASE_DIR / "data" / "phase_2" / "supervised" / "catboost"
 
-OUTPUT_FORECASTS = BASE_DIR / "data" / "catboost_forecasts.csv"
-OUTPUT_METRICS = BASE_DIR / "data" / "catboost_metrics.csv"
-OUTPUT_FEATURES = BASE_DIR / "data" / "catboost_feature_importance.csv"
-OUTPUT_SPLIT_SUMMARY = BASE_DIR / "data" / "catboost_split_summary.csv"
+OUTPUT_FORECASTS = PHASE2_DATA_DIR / "catboost_forecasts.csv"
+OUTPUT_METRICS = PHASE2_DATA_DIR / "catboost_metrics.csv"
+OUTPUT_FEATURES = PHASE2_DATA_DIR / "catboost_feature_importance.csv"
+OUTPUT_SPLIT_SUMMARY = PHASE2_DATA_DIR / "catboost_split_summary.csv"
 
 TARGET = "pm25"
 TIME_CANDIDATES = ["datetime", "date"]
@@ -1739,32 +1777,37 @@ Pra, gjatë ekzekutimit përdoruesi mund të shohë në mënyrë të drejtpërdr
 
 Skripta ruan këto output-e:
 
-- `data/catboost_forecasts.csv`
+- `data/phase_2/supervised/catboost/catboost_forecasts.csv`
   Parashikimet në test set bashkë me vlerat reale dhe residuals.
 
-- `data/catboost_metrics.csv`
+- `data/phase_2/supervised/catboost/catboost_metrics.csv`
   Tabela e metrikave finale.
 
-- `data/catboost_feature_importance.csv`
+- `data/phase_2/supervised/catboost/catboost_feature_importance.csv`
   Rëndësia e secilit feature.
 
-- `data/catboost_split_summary.csv`
+- `data/phase_2/supervised/catboost/catboost_split_summary.csv`
   Përmbledhja e ndarjes kronologjike.
 
 - `models/catboost_model/catboost_pm25_model.cbm`
   Modeli i trajnuar.
 
-- `data/catboost_run_info.json`
+- `data/phase_2/supervised/catboost/catboost_run_info.json`
   Përmbledhje e konfigurimit dhe output-eve.
 
 #### Vizualizimi interaktiv
 
 Skripta përfshin edhe ndërtimin e një grafiku interaktiv `Observed vs Predicted` me Plotly, ku parashikohet ruajtja e figurave në:
 
-- `pictures/catboost_model/catboost_forecast_interactive.html`
-- `pictures/catboost_model/catboost_forecast_interactive.png`
+- `pictures/phase_2/supervised/catboost/catboost_forecast_interactive.html`
+- `pictures/phase_2/supervised/catboost/catboost_forecast_interactive.png`
 
-Ky hap ishte implementuar në kod, por në ekzekutimin aktual skripta është ndalur te pjesa e vizualizimit për shkak të një problemi teknik me `Plotly add_vline()` dhe `Timestamp`, pasi modeli dhe metrikat ishin llogaritur tashmë me sukses.
+Në versionin aktual të repo-s, krahas figurës interaktive janë gjeneruar edhe figurat statike të standardizuara për krahasim:
+
+- `pictures/phase_2/supervised/catboost/catboost_actual_vs_predicted.png`
+- `pictures/phase_2/supervised/catboost/catboost_residual_diagnostics.png`
+- `pictures/phase_2/supervised/catboost/catboost_feature_importance.png`
+- `pictures/phase_2/supervised/catboost/catboost_metrics_table.png`
 
 ---
 
@@ -1801,12 +1844,12 @@ Përfshirja e _lags_ nuk i zhvlerëson variablat tona, por i vendos në kontekst
 **Rëndësia e veçorive:**
 Analiza e fitimit (gain) vërteton hipotezën e projektit tonë: ndërkohë që inercia kohore (`lag`) vendos bazën, **temperatura** dhe **prodhimi i energjisë** renditen menjëherë pas saj si faktorët e jashtëm me ndikimin më të lartë në luhatjen e cilësisë së ajrit.
 
-![Feature Importance](src/lightgbm_model/improved_model/feature_importance.png)
+![Feature Importance](pictures/phase_2/supervised/lightgbm_improved/lightgbm_feature_importance.png)
 
 **Parashikimi vs Realiteti:**
 Grafiku tregon se modeli i përmirësuar dinamik arrin të ndjekë me saktësi pikat ekstreme (peaks) të ndotjes gjatë kombinimit të prodhimit të lartë me kushtet atmosferike jo të favorshme.
 
-![Actual vs Predicted](src/lightgbm_model/improved_model/actual_vs_predicted.png)
+![Actual vs Predicted](pictures/phase_2/supervised/lightgbm_improved/lightgbm_actual_vs_predicted.png)
 
 #### Konkluzioni
 
@@ -1819,6 +1862,13 @@ Ky eksperiment vërteton se ndikimi i termocentraleve dhe motit në Prishtinë �
 - `feature_importance.csv` dhe `feature_importance.png`: Pesha e saktë e ndikimit për çdo variabël.
 - `actual_vs_predicted.png`: Grafiku kohor i përputhshmërisë mes parashikimit të modelit dhe ndotjes reale.
 - `learning_curve.png`: Kurba e rënies së gabimit gjatë procesit të trajnimit të modelit.
+- Për dokumentim të harmonizuar në fazën e dytë përdoren edhe:
+  - `data/phase_2/supervised/lightgbm_improved/feature_importance.csv`
+  - `data/phase_2/supervised/lightgbm_improved/metrics_summary.txt`
+  - `pictures/phase_2/supervised/lightgbm_improved/lightgbm_actual_vs_predicted.png`
+  - `pictures/phase_2/supervised/lightgbm_improved/lightgbm_feature_importance.png`
+  - `pictures/phase_2/supervised/lightgbm_improved/lightgbm_learning_curve.png`
+  - `pictures/phase_2/supervised/lightgbm_improved/lightgbm_metrics_table.png`
 
 ---
 
@@ -1838,7 +1888,7 @@ Kjo e bën `SARIMAX` një zgjedhje shumë të fortë akademikisht për temën to
 
 Implementimi ndodhet në:
 
-- `src/phase_2/sarimax_model/sarimax_model.py`
+- `src/phase_2/supervised/sarimax_model/sarimax_model.py`
 
 #### Pse SARIMAX?
 
@@ -1858,10 +1908,13 @@ Në termat e projektit tonë, `SARIMAX` i përgjigjet drejtpërdrejt pyetjes në
 
 #### Input
 
-Skripta kontrollon fillimisht dy lokacione të mundshme për dataset-in final:
+Skripta përdor si lokacion standard dataset-in final:
+
+- `data/phase_1/4E_selected_dataset.csv`
+
+Për kompatibilitet me versionet e mëhershme të repo-s, ajo kontrollon edhe fallback-un:
 
 - `data/4E_selected_dataset.csv`
-- `data/phase_1/4E_selected_dataset.csv`
 
 Në ekzekutimin aktual të raportuar në repo, input-i real ka qenë:
 
@@ -2033,7 +2086,7 @@ Këto rezultate e bëjnë `SARIMAX` një model shumë serioz dhe të balancuar p
 
 #### Interpretimi i koeficientëve
 
-Nga `data/sarimax_coefficients.csv`, koeficientët më domethënës janë:
+Nga `data/phase_2/supervised/sarimax/sarimax_coefficients.csv`, koeficientët më domethënës janë:
 
 - `ar.L1 = 0.8815`, që tregon memorje të fortë autoregresive të `PM2.5`;
 - `ar.S.L24 = 0.7981`, që konfirmon sezonalitetin ditor 24-orësh;
@@ -2052,39 +2105,43 @@ Në aspekt interpretimi, këto vlera tregojnë se:
 
 Grafiku kryesor i parashikimit:
 
-![SARIMAX Actual vs Predicted](pictures/sarimax_model/sarimax_actual_vs_predicted.png)
+![SARIMAX Actual vs Predicted](pictures/phase_2/supervised/sarimax/sarimax_actual_vs_predicted.png)
 
 Diagnostika e residualeve:
 
-![SARIMAX Residual Diagnostics](pictures/sarimax_model/sarimax_residual_diagnostics.png)
+![SARIMAX Residual Diagnostics](pictures/phase_2/supervised/sarimax/sarimax_residual_diagnostics.png)
+
+Paneli shtesë i koeficientëve më të fortë:
+
+![SARIMAX Coefficients](pictures/phase_2/supervised/sarimax/sarimax_coefficients.png)
 
 Përveç figurave statike, është ruajtur edhe vizualizimi interaktiv:
 
-- `pictures/sarimax_model/sarimax_forecast_interactive.html`
+- `pictures/phase_2/supervised/sarimax/sarimax_forecast_interactive.html`
 
 #### Artefaktet e gjeneruara nga SARIMAX
 
 Skripta ruan këto output-e:
 
-- `data/sarimax_forecasts.csv`
+- `data/phase_2/supervised/sarimax/sarimax_forecasts.csv`
   Parashikimet në test set, intervalet e besimit dhe residuals.
 
-- `data/sarimax_metrics.csv`
+- `data/phase_2/supervised/sarimax/sarimax_metrics.csv`
   Metrikat në validation dhe test, si dhe AIC/BIC.
 
-- `data/sarimax_coefficients.csv`
+- `data/phase_2/supervised/sarimax/sarimax_coefficients.csv`
   Koeficientët finalë dhe p-value-t për secilin parametër.
 
-- `data/sarimax_candidate_results.csv`
+- `data/phase_2/supervised/sarimax/sarimax_candidate_results.csv`
   Krahasimi i konfigurimeve kandidate gjatë model selection.
 
-- `data/sarimax_split_summary.csv`
+- `data/phase_2/supervised/sarimax/sarimax_split_summary.csv`
   Përmbledhja e ndarjes kronologjike.
 
-- `data/sarimax_residuals.csv`
+- `data/phase_2/supervised/sarimax/sarimax_residuals.csv`
   Residuals në njësinë reale të `PM2.5`.
 
-- `data/sarimax_run_info.json`
+- `data/phase_2/supervised/sarimax/sarimax_run_info.json`
   Konfigurimi i plotë i ekzekutimit dhe rrugët e output-eve.
 
 - `models/sarimax_model/sarimax_pm25_model.pkl`
@@ -2096,9 +2153,10 @@ Skripta ruan këto output-e:
 - `models/sarimax_model/sarimax_feature_columns.pkl`
   Lista e feature-ave exogenous të përdorura.
 
-- `pictures/sarimax_model/sarimax_actual_vs_predicted.png`
-- `pictures/sarimax_model/sarimax_residual_diagnostics.png`
-- `pictures/sarimax_model/sarimax_forecast_interactive.html`
+- `pictures/phase_2/supervised/sarimax/sarimax_actual_vs_predicted.png`
+- `pictures/phase_2/supervised/sarimax/sarimax_residual_diagnostics.png`
+- `pictures/phase_2/supervised/sarimax/sarimax_forecast_interactive.html`
+- `pictures/phase_2/supervised/sarimax/sarimax_coefficients.png`
 
 ---
 
@@ -2116,7 +2174,7 @@ Kjo pjesë është ndërtuar për të eksploruar strukturën latente të dataset
 
 Si edhe te CatBoost, hyrja është:
 
-- `data/4E_selected_dataset.csv`
+- `data/phase_1/4E_selected_dataset.csv`
 
 #### Përgatitja e feature-ave
 
@@ -2268,16 +2326,16 @@ Pra, gjatë ekzekutimit përdoruesi mund të shohë:
 
 Skripta ruan këto output-e:
 
-- `data/hdbscan_clustered_dataset.csv`
+- `data/phase_2/unsupervised/hdbscan/hdbscan_clustered_dataset.csv`
   Dataset-i final me kolonat `cluster_label`, `cluster_probability`, `outlier_score`, `umap_1`, `umap_2`.
 
-- `data/hdbscan_metrics.csv`
+- `data/phase_2/unsupervised/hdbscan/hdbscan_metrics.csv`
   Metrikat e clustering-ut dhe përmbledhja e modelit.
 
-- `data/hdbscan_cluster_summary.csv`
+- `data/phase_2/unsupervised/hdbscan/hdbscan_cluster_summary.csv`
   Përmbledhje statistikore për çdo cluster.
 
-- `data/hdbscan_feature_summary.csv`
+- `data/phase_2/unsupervised/hdbscan/hdbscan_feature_summary.csv`
   Përmbledhje e tipareve që dallojnë më shumë cluster-at.
 
 - `models/hdbscan_model/hdbscan_model.pkl`
@@ -2289,15 +2347,25 @@ Skripta ruan këto output-e:
 - `models/hdbscan_model/hdbscan_umap.pkl`
   Objekti i ruajtur i reduktimit dimensional.
 
-- `data/hdbscan_run_info.json`
+- `data/phase_2/unsupervised/hdbscan/hdbscan_run_info.json`
   Informacion për konfigurimin dhe rrugët e output-eve.
 
 #### Vizualizimi interaktiv
 
 Vizualizimi interaktiv i cluster-ëve gjenerohet në:
 
-- `pictures/hdbscan_model/hdbscan_umap_interactive.html`
-- `pictures/hdbscan_model/hdbscan_umap_interactive.png`
+- `pictures/phase_2/unsupervised/hdbscan/hdbscan_umap_interactive.html`
+- `pictures/phase_2/unsupervised/hdbscan/hdbscan_umap_interactive.png`
+
+Për krahasim të harmonizuar janë gjeneruar edhe:
+
+- `pictures/phase_2/unsupervised/hdbscan/hdbscan_pm25_by_cluster.png`
+- `pictures/phase_2/unsupervised/hdbscan/hdbscan_pm25_timeline.png`
+- `pictures/phase_2/unsupervised/hdbscan/hdbscan_pm25_zoom.png`
+- `pictures/phase_2/unsupervised/hdbscan/hdbscan_scatter.png`
+- `pictures/phase_2/unsupervised/hdbscan/hdbscan_confidence_distribution.png`
+- `pictures/phase_2/unsupervised/hdbscan/hdbscan_feature_shift_panel.png`
+- `pictures/phase_2/unsupervised/hdbscan/hdbscan_metrics_table.png`
 
 Ky vizualizim lejon:
 
@@ -2319,7 +2387,7 @@ Kjo qasje është shumë e vlefshme në kontekstin tonë, sepse kushtet atmosfer
 
 Implementimi ndodhet në:
 
-- `src/phase_2/gaussian_mixture_model/gaussian_mixture_model.py`
+- `src/phase_2/unsupervised/gaussian_mixture_model/gaussian_mixture_model.py`
 
 #### Pse Gaussian Mixture?
 
@@ -2337,10 +2405,13 @@ Nga pikëpamja akademike, kjo e forcon shumë projektin, sepse demonstron dy fil
 
 #### Input
 
-Ashtu si te `SARIMAX`, skripta kontrollon dy lokacione të mundshme:
+Ashtu si te `SARIMAX`, skripta përdor si lokacion standard dataset-in final:
+
+- `data/phase_1/4E_selected_dataset.csv`
+
+dhe ruan edhe një fallback për kompatibilitet me strukturat e mëhershme:
 
 - `data/4E_selected_dataset.csv`
-- `data/phase_1/4E_selected_dataset.csv`
 
 Në ekzekutimin aktual është përdorur:
 
@@ -2497,7 +2568,7 @@ Pra, te `GMM` nuk duhet parë vetëm silhouette, por kombinimi i:
 
 #### Interpretimi i cluster-ëve
 
-Nga `data/gmm_cluster_summary.csv` dhe `data/gmm_feature_summary.csv`, dalin disa profile shumë interesante:
+Nga `data/phase_2/unsupervised/gaussian_mixture/gmm_cluster_summary.csv` dhe `data/phase_2/unsupervised/gaussian_mixture/gmm_feature_summary.csv`, dalin disa profile shumë interesante:
 
 - `Cluster 3` është regjimi me ndotjen mesatare më të lartë:
   - `pm25_real_mean = 17.51`
@@ -2524,36 +2595,44 @@ Kjo do të thotë se `Gaussian Mixture` nuk po ndan të dhënat vetëm sipas nj�
 
 Krahasimi i kandidatëve gjatë model selection:
 
-![GMM Model Selection](pictures/gaussian_mixture_model/gmm_model_selection.png)
+![GMM Model Selection](pictures/phase_2/unsupervised/gaussian_mixture/gmm_model_selection.png)
 
 Heatmap-i i profileve të cluster-ëve:
 
-![GMM Cluster Profile Heatmap](pictures/gaussian_mixture_model/gmm_cluster_profile_heatmap.png)
+![GMM Cluster Profile Heatmap](pictures/phase_2/unsupervised/gaussian_mixture/gmm_cluster_profile_heatmap.png)
+
+Profili i `PM2.5` sipas cluster-it:
+
+![GMM PM25 by Cluster](pictures/phase_2/unsupervised/gaussian_mixture/gmm_pm25_by_cluster.png)
+
+Shpërndarja e cluster-ëve në raport me energjinë dhe `PM2.5`:
+
+![GMM Scatter](pictures/phase_2/unsupervised/gaussian_mixture/gmm_scatter.png)
 
 Vizualizimi interaktiv në hapësirën e reduktuar me `PCA` ruhet në:
 
-- `pictures/gaussian_mixture_model/gmm_pca_interactive.html`
+- `pictures/phase_2/unsupervised/gaussian_mixture/gmm_pca_interactive.html`
 
 #### Artefaktet e gjeneruara nga Gaussian Mixture
 
 Skripta ruan këto output-e:
 
-- `data/gmm_clustered_dataset.csv`
+- `data/phase_2/unsupervised/gaussian_mixture/gmm_clustered_dataset.csv`
   Dataset-i me etiketat e cluster-it, probabilitetet e anëtarësimit dhe koordinatat `PCA`.
 
-- `data/gmm_metrics.csv`
+- `data/phase_2/unsupervised/gaussian_mixture/gmm_metrics.csv`
   Përmbledhja e metrikave finale të clustering-ut.
 
-- `data/gmm_cluster_summary.csv`
+- `data/phase_2/unsupervised/gaussian_mixture/gmm_cluster_summary.csv`
   Statistika për secilin cluster, përfshirë `pm25_real_mean`.
 
-- `data/gmm_feature_summary.csv`
+- `data/phase_2/unsupervised/gaussian_mixture/gmm_feature_summary.csv`
   Feature-at që dallojnë më së shumti secilin cluster nga mesatarja globale.
 
-- `data/gmm_model_selection.csv`
+- `data/phase_2/unsupervised/gaussian_mixture/gmm_model_selection.csv`
   Tabela e plotë e kandidatëve të testuar.
 
-- `data/gmm_run_info.json`
+- `data/phase_2/unsupervised/gaussian_mixture/gmm_run_info.json`
   Informacioni i konfigurimit dhe rrugët e output-eve.
 
 - `models/gaussian_mixture_model/gmm_model.pkl`
@@ -2568,9 +2647,16 @@ Skripta ruan këto output-e:
 - `models/gaussian_mixture_model/gmm_feature_columns.pkl`
   Lista e feature-ave të përdorura.
 
-- `pictures/gaussian_mixture_model/gmm_model_selection.png`
-- `pictures/gaussian_mixture_model/gmm_cluster_profile_heatmap.png`
-- `pictures/gaussian_mixture_model/gmm_pca_interactive.html`
+- `pictures/phase_2/unsupervised/gaussian_mixture/gmm_model_selection.png`
+- `pictures/phase_2/unsupervised/gaussian_mixture/gmm_cluster_profile_heatmap.png`
+- `pictures/phase_2/unsupervised/gaussian_mixture/gmm_pca_interactive.html`
+- `pictures/phase_2/unsupervised/gaussian_mixture/gmm_pm25_by_cluster.png`
+- `pictures/phase_2/unsupervised/gaussian_mixture/gmm_pm25_timeline.png`
+- `pictures/phase_2/unsupervised/gaussian_mixture/gmm_pm25_zoom.png`
+- `pictures/phase_2/unsupervised/gaussian_mixture/gmm_scatter.png`
+- `pictures/phase_2/unsupervised/gaussian_mixture/gmm_confidence_distribution.png`
+- `pictures/phase_2/unsupervised/gaussian_mixture/gmm_feature_shift_panel.png`
+- `pictures/phase_2/unsupervised/gaussian_mixture/gmm_metrics_table.png`
 
 ---
 
@@ -2582,14 +2668,14 @@ Ndryshe nga modelet e tjera që përpiqen të mësojnë se çfarë është "norm
 #### Identifikimi i goditjeve kohore (Zoom-in Analysis)
 Për të kuptuar saktësinë e modelit, kemi zmadhuar dritaren kohore në periudhën kritike Nëntor–Dhjetor 2025.
 
-![Isolation Forest Zoom-in PM2.5](src/phase_2/isolation_forest_model/isolation_forest_results/isolation_forest_pm25_zoom.png)
+![Isolation Forest Zoom-in PM2.5](pictures/phase_2/unsupervised/isolation_forest/isolation_forest_pm25_zoom.png)
 
 Konstatimi: Siç shihet nga pikat e kuqe, modeli nuk gjeneron alarme të rreme gjatë luhatjeve të zakonshme. Ai shënjestron me saktësi vetëm momentet (peaks) kur niveli i PM2.5 del plotësisht jashtë kontrollit apo ritmit sezonal.
 
 #### Korrelacioni vizual: Ndotja vs. Energjia (Scatter Plot)
 Ky grafik ballafaqon prodhimin total të energjisë (MW) me nivelet e PM2.5 për të parë se ku "thyhet" normaliteti.
 
-![Isolation Forest Energy vs PM2.5 Scatter](src/phase_2/isolation_forest_model/isolation_forest_results/isolation_forest_scatter.png)
+![Isolation Forest Energy vs PM2.5 Scatter](pictures/phase_2/unsupervised/isolation_forest/isolation_forest_scatter.png)
 
 Interpretimi i shpërndarjes:
 
@@ -2611,15 +2697,43 @@ Ndërkohë që algoritmet supervised si LightGBM parashikojnë trendin e përgji
 
 Artifaktet e gjeneruara
 
-![Isolation Forest PM2.5 Trend](src/phase_2/isolation_forest_model/isolation_forest_results/isolation_forest_pm25.png)
+![Isolation Forest PM2.5 Trend](pictures/phase_2/unsupervised/isolation_forest/isolation_forest_pm25.png)
 
-![Isolation Forest Energy Trend](src/phase_2/isolation_forest_model/isolation_forest_results/isolation_forest_energy.png)
+![Isolation Forest Energy Trend](pictures/phase_2/unsupervised/isolation_forest/isolation_forest_energy.png)
 
-- `isolation_forest_pm25_zoom.png`: Pamja e zmadhuar e anomalive (Nëntor–Dhjetor 2025).
-- `isolation_forest_scatter.png`: Grafiku i korrelacionit (Normaliteti vs. Anomalitë).
-- `isolation_forest_pm25.png`: Ecuria e plotë 3-vjeçare e anomalive për PM2.5.
-- `isolation_forest_energy.png`: Ecuria e plotë 3-vjeçare e prodhimit energjetik.
-- `top_anomalies_list.csv`: Regjistri i 100 rasteve më anormale për analizë të detajuar.
+- `pictures/phase_2/unsupervised/isolation_forest/isolation_forest_pm25_zoom.png`: Pamja e zmadhuar e anomalive.
+- `pictures/phase_2/unsupervised/isolation_forest/isolation_forest_scatter.png`: Grafiku i korrelacionit `PM2.5` vs energji.
+- `pictures/phase_2/unsupervised/isolation_forest/isolation_forest_pm25.png`: Ecuria kohore e anomalive për `PM2.5`.
+- `pictures/phase_2/unsupervised/isolation_forest/isolation_forest_energy.png`: Ecuria kohore e prodhimit energjetik.
+- `pictures/phase_2/unsupervised/isolation_forest/isolation_forest_score_distribution.png`: Shpërndarja e score-ve të anomalive.
+- `data/phase_2/unsupervised/isolation_forest/isolation_forest_top_anomalies.csv`: Regjistri i rasteve më anormale për analizë të detajuar.
+
+---
+
+### Ekzekutimi i fazës së dytë
+
+Pas sqarimit të secilit model, riprodhueshmëria e pipeline-it të fazës së dytë mund të dokumentohet qartë duke i ekzekutuar skriptat individualisht nga root-i i projektit me interpreter-in e environment-it virtual:
+
+```powershell
+.\.venv\Scripts\python.exe src\phase_2\supervised\catboost_model\catboost_model.py
+.\.venv\Scripts\python.exe src\phase_2\supervised\lightgbm_model\lightgbm_model.py
+.\.venv\Scripts\python.exe src\phase_2\supervised\sarimax_model\sarimax_model.py
+
+.\.venv\Scripts\python.exe src\phase_2\unsupervised\hdbscan_model\hdbscan_model.py
+.\.venv\Scripts\python.exe src\phase_2\unsupervised\gaussian_mixture_model\gaussian_mixture_model.py
+.\.venv\Scripts\python.exe src\phase_2\unsupervised\isolation_forest_model\isolation_forest_extended_outputs.py
+
+.\.venv\Scripts\python.exe src\phase_2\comparison\build_phase2_standardized_outputs.py
+```
+
+Skripta e fundit është veçanërisht e rëndësishme për README dhe raportim, sepse:
+
+- gjeneron `data/phase_2/comparison/supervised_model_comparison.csv`;
+- gjeneron `data/phase_2/comparison/unsupervised_model_comparison.csv`;
+- krijon figura krahasuese në `pictures/phase_2/comparison/`;
+- dhe harmonizon vizualizimet statike për modelet supervised dhe unsupervised.
+
+Kjo renditje e seksionit e bën README-n më të natyrshëm akademikisht: fillimisht prezantohen modelet dhe interpretimi i tyre, ndërsa në fund tregohet qartë si mund të riprodhohen rezultatet.
 
 ---
 
@@ -2646,12 +2760,13 @@ Kjo ndihmon në kuptimin se:
 
 #### 2. Interpretimi unsupervised
 
-Te modelet unsupervised (`HDBSCAN` dhe `Gaussian Mixture`), interpretimi bazohet në:
+Te modelet unsupervised (`HDBSCAN`, `Gaussian Mixture` dhe `Isolation Forest`), interpretimi bazohet në:
 
 - numrin dhe përmasat e cluster-ëve,
 - pikat noise,
 - probabilitetet e anëtarësimit në cluster,
 - outlier scores,
+- raportin e anomalive,
 - `BIC/AIC` te modelet probabilistike,
 - dhe përmbledhjet statistikore të feature-ave sipas cluster-it.
 
@@ -2670,65 +2785,131 @@ Pas fazës së dytë të projektit, përveç output-eve të pipeline-it të për
 
 #### CatBoost
 
-- `data/catboost_forecasts.csv`
-- `data/catboost_metrics.csv`
-- `data/catboost_feature_importance.csv`
-- `data/catboost_split_summary.csv`
-- `data/catboost_run_info.json`
+- `data/phase_2/supervised/catboost/catboost_forecasts.csv`
+- `data/phase_2/supervised/catboost/catboost_metrics.csv`
+- `data/phase_2/supervised/catboost/catboost_feature_importance.csv`
+- `data/phase_2/supervised/catboost/catboost_split_summary.csv`
+- `data/phase_2/supervised/catboost/catboost_run_info.json`
 - `models/catboost_model/catboost_pm25_model.cbm`
-- `pictures/catboost_model/catboost_forecast_interactive.html`
-- `pictures/catboost_model/catboost_forecast_interactive.png`
+- `pictures/phase_2/supervised/catboost/catboost_forecast_interactive.html`
+- `pictures/phase_2/supervised/catboost/catboost_forecast_interactive.png`
+- `pictures/phase_2/supervised/catboost/catboost_actual_vs_predicted.png`
+- `pictures/phase_2/supervised/catboost/catboost_residual_diagnostics.png`
+- `pictures/phase_2/supervised/catboost/catboost_feature_importance.png`
+- `pictures/phase_2/supervised/catboost/catboost_metrics_table.png`
+
+#### LightGBM
+
+- `src/phase_2/supervised/lightgbm_model/improved_model/improved_model.joblib`
+- `src/phase_2/supervised/lightgbm_model/improved_model/metrics_summary.txt`
+- `src/phase_2/supervised/lightgbm_model/improved_model/feature_importance.csv`
+- `src/phase_2/supervised/lightgbm_model/improved_model/feature_importance.png`
+- `src/phase_2/supervised/lightgbm_model/improved_model/actual_vs_predicted.png`
+- `src/phase_2/supervised/lightgbm_model/improved_model/learning_curve.png`
+- `data/phase_2/supervised/lightgbm_improved/metrics_summary.txt`
+- `data/phase_2/supervised/lightgbm_improved/feature_importance.csv`
+- `pictures/phase_2/supervised/lightgbm_improved/lightgbm_actual_vs_predicted.png`
+- `pictures/phase_2/supervised/lightgbm_improved/lightgbm_feature_importance.png`
+- `pictures/phase_2/supervised/lightgbm_improved/lightgbm_learning_curve.png`
+- `pictures/phase_2/supervised/lightgbm_improved/lightgbm_metrics_table.png`
 
 #### HDBSCAN
 
-- `data/hdbscan_clustered_dataset.csv`
-- `data/hdbscan_metrics.csv`
-- `data/hdbscan_cluster_summary.csv`
-- `data/hdbscan_feature_summary.csv`
-- `data/hdbscan_run_info.json`
+- `data/phase_2/unsupervised/hdbscan/hdbscan_clustered_dataset.csv`
+- `data/phase_2/unsupervised/hdbscan/hdbscan_metrics.csv`
+- `data/phase_2/unsupervised/hdbscan/hdbscan_cluster_summary.csv`
+- `data/phase_2/unsupervised/hdbscan/hdbscan_feature_summary.csv`
+- `data/phase_2/unsupervised/hdbscan/hdbscan_run_info.json`
 - `models/hdbscan_model/hdbscan_model.pkl`
 - `models/hdbscan_model/hdbscan_scaler.pkl`
 - `models/hdbscan_model/hdbscan_umap.pkl`
-- `pictures/hdbscan_model/hdbscan_umap_interactive.html`
-- `pictures/hdbscan_model/hdbscan_umap_interactive.png`
+- `pictures/phase_2/unsupervised/hdbscan/hdbscan_umap_interactive.html`
+- `pictures/phase_2/unsupervised/hdbscan/hdbscan_umap_interactive.png`
+- `pictures/phase_2/unsupervised/hdbscan/hdbscan_pm25_by_cluster.png`
+- `pictures/phase_2/unsupervised/hdbscan/hdbscan_pm25_timeline.png`
+- `pictures/phase_2/unsupervised/hdbscan/hdbscan_pm25_zoom.png`
+- `pictures/phase_2/unsupervised/hdbscan/hdbscan_scatter.png`
+- `pictures/phase_2/unsupervised/hdbscan/hdbscan_confidence_distribution.png`
+- `pictures/phase_2/unsupervised/hdbscan/hdbscan_feature_shift_panel.png`
+- `pictures/phase_2/unsupervised/hdbscan/hdbscan_metrics_table.png`
 
 #### SARIMAX
 
-- `data/sarimax_forecasts.csv`
-- `data/sarimax_metrics.csv`
-- `data/sarimax_coefficients.csv`
-- `data/sarimax_candidate_results.csv`
-- `data/sarimax_split_summary.csv`
-- `data/sarimax_residuals.csv`
-- `data/sarimax_run_info.json`
+- `data/phase_2/supervised/sarimax/sarimax_forecasts.csv`
+- `data/phase_2/supervised/sarimax/sarimax_metrics.csv`
+- `data/phase_2/supervised/sarimax/sarimax_coefficients.csv`
+- `data/phase_2/supervised/sarimax/sarimax_candidate_results.csv`
+- `data/phase_2/supervised/sarimax/sarimax_split_summary.csv`
+- `data/phase_2/supervised/sarimax/sarimax_residuals.csv`
+- `data/phase_2/supervised/sarimax/sarimax_run_info.json`
 - `models/sarimax_model/sarimax_pm25_model.pkl`
 - `models/sarimax_model/sarimax_summary.txt`
 - `models/sarimax_model/sarimax_feature_columns.pkl`
-- `pictures/sarimax_model/sarimax_actual_vs_predicted.png`
-- `pictures/sarimax_model/sarimax_residual_diagnostics.png`
-- `pictures/sarimax_model/sarimax_forecast_interactive.html`
+- `pictures/phase_2/supervised/sarimax/sarimax_actual_vs_predicted.png`
+- `pictures/phase_2/supervised/sarimax/sarimax_residual_diagnostics.png`
+- `pictures/phase_2/supervised/sarimax/sarimax_forecast_interactive.html`
+- `pictures/phase_2/supervised/sarimax/sarimax_coefficients.png`
+- `pictures/phase_2/supervised/sarimax/sarimax_metrics_table.png`
 
 #### Gaussian Mixture
 
-- `data/gmm_clustered_dataset.csv`
-- `data/gmm_metrics.csv`
-- `data/gmm_cluster_summary.csv`
-- `data/gmm_feature_summary.csv`
-- `data/gmm_model_selection.csv`
-- `data/gmm_run_info.json`
+- `data/phase_2/unsupervised/gaussian_mixture/gmm_clustered_dataset.csv`
+- `data/phase_2/unsupervised/gaussian_mixture/gmm_metrics.csv`
+- `data/phase_2/unsupervised/gaussian_mixture/gmm_cluster_summary.csv`
+- `data/phase_2/unsupervised/gaussian_mixture/gmm_feature_summary.csv`
+- `data/phase_2/unsupervised/gaussian_mixture/gmm_model_selection.csv`
+- `data/phase_2/unsupervised/gaussian_mixture/gmm_run_info.json`
 - `models/gaussian_mixture_model/gmm_model.pkl`
 - `models/gaussian_mixture_model/gmm_scaler.pkl`
 - `models/gaussian_mixture_model/gmm_pca.pkl`
 - `models/gaussian_mixture_model/gmm_feature_columns.pkl`
-- `pictures/gaussian_mixture_model/gmm_model_selection.png`
-- `pictures/gaussian_mixture_model/gmm_cluster_profile_heatmap.png`
-- `pictures/gaussian_mixture_model/gmm_pca_interactive.html`
+- `pictures/phase_2/unsupervised/gaussian_mixture/gmm_model_selection.png`
+- `pictures/phase_2/unsupervised/gaussian_mixture/gmm_cluster_profile_heatmap.png`
+- `pictures/phase_2/unsupervised/gaussian_mixture/gmm_pca_interactive.html`
+- `pictures/phase_2/unsupervised/gaussian_mixture/gmm_pm25_by_cluster.png`
+- `pictures/phase_2/unsupervised/gaussian_mixture/gmm_pm25_timeline.png`
+- `pictures/phase_2/unsupervised/gaussian_mixture/gmm_pm25_zoom.png`
+- `pictures/phase_2/unsupervised/gaussian_mixture/gmm_scatter.png`
+- `pictures/phase_2/unsupervised/gaussian_mixture/gmm_confidence_distribution.png`
+- `pictures/phase_2/unsupervised/gaussian_mixture/gmm_feature_shift_panel.png`
+- `pictures/phase_2/unsupervised/gaussian_mixture/gmm_metrics_table.png`
+
+#### Isolation Forest
+
+- `data/phase_2/unsupervised/isolation_forest/isolation_forest_scored_dataset.csv`
+- `data/phase_2/unsupervised/isolation_forest/isolation_forest_metrics.csv`
+- `data/phase_2/unsupervised/isolation_forest/isolation_forest_feature_summary.csv`
+- `data/phase_2/unsupervised/isolation_forest/isolation_forest_top_anomalies.csv`
+- `data/phase_2/unsupervised/isolation_forest/isolation_forest_run_info.json`
+- `models/isolation_forest_model/isolation_forest_model.pkl`
+- `models/isolation_forest_model/isolation_forest_feature_columns.pkl`
+- `pictures/phase_2/unsupervised/isolation_forest/isolation_forest_pm25.png`
+- `pictures/phase_2/unsupervised/isolation_forest/isolation_forest_energy.png`
+- `pictures/phase_2/unsupervised/isolation_forest/isolation_forest_pm25_zoom.png`
+- `pictures/phase_2/unsupervised/isolation_forest/isolation_forest_scatter.png`
+- `pictures/phase_2/unsupervised/isolation_forest/isolation_forest_score_distribution.png`
+- `pictures/phase_2/unsupervised/isolation_forest/isolation_forest_feature_shift_panel.png`
+- `pictures/phase_2/unsupervised/isolation_forest/isolation_forest_metrics_table.png`
+
+#### Output-et krahasuese të fazës së dytë
+
+- `data/phase_2/comparison/supervised_model_comparison.csv`
+- `data/phase_2/comparison/unsupervised_model_comparison.csv`
+- `pictures/phase_2/comparison/supervised_comparison_table.png`
+- `pictures/phase_2/comparison/supervised_error_metrics.png`
+- `pictures/phase_2/comparison/supervised_r2_comparison.png`
+- `pictures/phase_2/comparison/supervised_feature_panels.png`
+- `pictures/phase_2/comparison/unsupervised_comparison_table.png`
+- `pictures/phase_2/comparison/unsupervised_special_ratio_and_groups.png`
+- `pictures/phase_2/comparison/unsupervised_clustering_quality.png`
+- `pictures/phase_2/comparison/unsupervised_feature_panels.png`
+- `pictures/phase_2/comparison/unsupervised_pm25_profiles.png`
 
 ---
 
 ### Vizualizimet interaktive
 
-Në këtë fazë janë ndërtuar edhe vizualizime të reja, përtej heatmap-ave dhe histogramave të pipeline-it fillestar.
+Në këtë fazë janë ndërtuar jo vetëm vizualizime interaktive, por edhe figura statike të standardizuara për krahasim akademik mes modeleve.
 
 #### Vizualizimi i CatBoost
 
@@ -2741,7 +2922,7 @@ Grafiku interaktiv `Observed vs Predicted` është konceptuar për të paraqitur
 
 Ky vizualizim ruhet në:
 
-- `pictures/catboost_model/catboost_forecast_interactive.html`
+- `pictures/phase_2/supervised/catboost/catboost_forecast_interactive.html`
 
 #### Vizualizimi i HDBSCAN
 
@@ -2754,7 +2935,7 @@ Vizualizimi 2D me `UMAP` është konceptuar për të paraqitur:
 
 Ky vizualizim ruhet në:
 
-- `pictures/hdbscan_model/hdbscan_umap_interactive.html`
+- `pictures/phase_2/unsupervised/hdbscan/hdbscan_umap_interactive.html`
 
 #### Vizualizimi i SARIMAX
 
@@ -2767,9 +2948,10 @@ Vizualizimi i `SARIMAX` është ndërtuar për të paraqitur:
 
 Artefaktet kryesore të vizualizimit janë:
 
-- `pictures/sarimax_model/sarimax_forecast_interactive.html`
-- `pictures/sarimax_model/sarimax_actual_vs_predicted.png`
-- `pictures/sarimax_model/sarimax_residual_diagnostics.png`
+- `pictures/phase_2/supervised/sarimax/sarimax_forecast_interactive.html`
+- `pictures/phase_2/supervised/sarimax/sarimax_actual_vs_predicted.png`
+- `pictures/phase_2/supervised/sarimax/sarimax_residual_diagnostics.png`
+- `pictures/phase_2/supervised/sarimax/sarimax_coefficients.png`
 
 #### Vizualizimi i Gaussian Mixture
 
@@ -2781,9 +2963,29 @@ Vizualizimi i `Gaussian Mixture` është ndërtuar për të paraqitur:
 
 Artefaktet kryesore të vizualizimit janë:
 
-- `pictures/gaussian_mixture_model/gmm_pca_interactive.html`
-- `pictures/gaussian_mixture_model/gmm_model_selection.png`
-- `pictures/gaussian_mixture_model/gmm_cluster_profile_heatmap.png`
+- `pictures/phase_2/unsupervised/gaussian_mixture/gmm_pca_interactive.html`
+- `pictures/phase_2/unsupervised/gaussian_mixture/gmm_model_selection.png`
+- `pictures/phase_2/unsupervised/gaussian_mixture/gmm_cluster_profile_heatmap.png`
+- `pictures/phase_2/unsupervised/gaussian_mixture/gmm_pm25_by_cluster.png`
+- `pictures/phase_2/unsupervised/gaussian_mixture/gmm_scatter.png`
+
+#### Vizualizimi i Isolation Forest
+
+Vizualizimet e `Isolation Forest` janë ndërtuar për të paraqitur:
+
+- ecurinë kohore të anomalive në `PM2.5`,
+- lidhjen mes prodhimit të energjisë dhe ndotjes,
+- shpërndarjen e score-ve të anomalisë,
+- dhe profilin `Normal vs Anomaly`.
+
+Artefaktet kryesore të vizualizimit janë:
+
+- `pictures/phase_2/unsupervised/isolation_forest/isolation_forest_pm25.png`
+- `pictures/phase_2/unsupervised/isolation_forest/isolation_forest_pm25_zoom.png`
+- `pictures/phase_2/unsupervised/isolation_forest/isolation_forest_scatter.png`
+- `pictures/phase_2/unsupervised/isolation_forest/isolation_forest_score_distribution.png`
+- `pictures/phase_2/unsupervised/isolation_forest/isolation_forest_pm25_profile.png`
+- `pictures/phase_2/unsupervised/isolation_forest/isolation_forest_metrics_table.png`
 
 ---
 
