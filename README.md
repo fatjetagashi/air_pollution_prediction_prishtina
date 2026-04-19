@@ -3760,17 +3760,18 @@ Kjo do të thotë se pipeline-i i ndërtuar në këtë projekt tashmë përbën 
 
 ---
 
----
-
 ## Zgjerime në vazhdim
 
-Në vazhdim, ky projekt mund të zgjerohet me:
+Si vazhdim logjik i kësaj pune, projekti mund të zgjerohet në disa drejtime që do ta forconin edhe më shumë si nga ana akademike, ashtu edhe nga ana praktike:
 
-- modele decision trees për parashikimin e `PM2.5`,
-- krahasim modelesh si Random Forest, XGBoost,
-- validim temporal `train/validation/test split` sipas kohës,
-- analizë më të avancuar të rëndësisë së tipareve,
-- krahasim të performancës para dhe pas feature selection.
+- zgjerim të parashikimit nga `1-step ahead` në `multi-step forecasting` për horizonte si `24h`, `48h` dhe `72h`, me krahasim të degradimit të performancës sipas horizontit;
+- ndërtim të modeleve `ensemble` ose `hybrid`, ku parashikimet e `LightGBM`, `CatBoost` dhe `SARIMAX` kombinohen për të arritur stabilitet dhe saktësi më të lartë;
+- shtim të burimeve të reja të të dhënave, si indikatorë të trafikut, presion atmosferik, inversion termik, të dhëna satelitore ose të dhëna nga stacione të tjera monitorimi;
+- zgjerim të analizës nga vetëm `PM2.5` edhe drejt ndotësve të tjerë si `PM10`, `NO2` dhe `O3`, me mundësi për modelim shumë-variabël të cilësisë së ajrit;
+- analizë më të thelluar të interpretueshmërisë së modeleve përmes teknikave si `SHAP`, `partial dependence plots` dhe krahasimit të ndikimit të feature-ave në skenarë të ndryshëm sezonalë;
+- validim më të fortë `out-of-time`, duke trajnuar modelin në një interval më të hershëm dhe duke e testuar në një periudhë të re kohore për të matur robustësinë reale të përgjithësimit;
+- ndërtim të një sistemi paralajmërues për episode të larta të ndotjes, ku forecast-i i `PM2.5` lidhet me kategori rreziku dhe me pragje praktike për interpretim publik;
+- zgjerim të dashboard-it ekzistues me monitorim pothuajse në kohë reale, krahasim automatik mes modeleve dhe sinjalizim të drift-it të të dhënave nëse shpërndarjet ndryshojnë me kalimin e kohës.
 
 ---
 
