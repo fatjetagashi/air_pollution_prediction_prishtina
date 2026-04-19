@@ -28,7 +28,7 @@
 
 1. [Përmbledhje e projektit](#përmbledhje-e-projektit)
 2. [Qëllimi i punimit](#qëllimi-i-punimit)
-3. [Dashboard Streamlit](#dashboard-streamlit)
+3. [Dashboard](#dashboard)
 4. [Struktura e repository-t](#struktura-e-repository-t)
 5. [01 Përgatitja e modelit](#01-përgatitja-e-modelit)
    - [Burimet e të dhënave](#burimet-e-të-dhënave)
@@ -60,7 +60,7 @@
    - [Rezultatet kryesore të fazës së dytë](#rezultatet-kryesore-të-fazës-së-dytë)
    - [Metrikat dhe interpretimi i rezultateve](#metrikat-dhe-interpretimi-i-rezultateve)
    - [Artefaktet e krijuara nga modelet](#artefaktet-e-krijuara-nga-modelet)
-   - [Vizualizimet interaktive](#vizualizimet-interaktive)
+  - [Vizualizimet e fazës së dytë](#vizualizimet-e-fazës-së-dytë)
    - [Rezultati i zgjeruar i pipeline-it](#rezultati-i-zgjeruar-i-pipeline-it)
 7. [Zgjerime në vazhdim](#zgjerime-në-vazhdim)
 8. [Anëtarët e grupit](#anëtarët-e-grupit)
@@ -127,7 +127,7 @@ Objektivat kryesore janë:
 
 ---
 
-## Dashboard Streamlit
+## Dashboard
 
 Ky projekt përfshin edhe një dashboard interaktiv të ndërtuar me Streamlit në `app.py`, i cili shërben si shtresë vizuale dhe demonstrative mbi të gjithë pipeline-in. Në versionin aktual, dashboard-i nuk është më vetëm një simulator i thjeshtë, por një mjedis i zgjeruar ku bashkohen eksplorimi i të dhënave historike, simulimi i faktorëve kryesorë dhe prezantimi i rezultateve të modeleve të fazës së dytë.
 
@@ -360,15 +360,6 @@ AIR_POLLUTION_PREDICTION_PRISHTINA/
             ├── unsupervised_pm25_profiles.png
             └── unsupervised_special_ratio_and_groups.png
 ```
-
-Kjo strukturë është e favorshme për dokumentim profesional sepse:
-
-- ndan qartë fazën e përgatitjes së të dhënave nga faza e modelimit;
-- e bën të dallueshme rrjedhën `raw -> phase_1 -> phase_2`;
-- mban artefaktet e secilit model në një vend të qëndrueshëm;
-- ndan qartë `src`, `data`, `models` dhe `pictures`, pra kodin, të dhënat, modelet e ruajtura dhe vizualizimet;
-- lejon krahasim më të lehtë mes modeleve supervised dhe unsupervised;
-- dhe e bën repo-n më të pastër për dorëzim, prezantim dhe mirëmbajtje.
 
 ---
 
@@ -1666,6 +1657,8 @@ Pas leximit të dataset-it:
 
 Në ekzekutimin aktual, modeli ka përdorur këto feature-a:
 
+- `pm25_lag_1`
+- `pm25_lag_24`
 - `hour_sin`
 - `hour_cos`
 - `month_sin`
@@ -1715,7 +1708,7 @@ Para trajnimit, skripta bën kontrollin bazë të cilësisë për këtë fazë t
 Në ekzekutimin e raportuar:
 
 - numri i rreshtave hyrës ka qenë **9347**
-- numri i feature-ave ka qenë **13**
+- numri i feature-ave ka qenë **15**
 - mungesa në kolonat e modelit kanë qenë **0**
 - rreshta të hequr pas cleaning: **0**
 
@@ -1832,14 +1825,25 @@ Pas trajnimit, modeli gjeneron parashikime mbi test set-in dhe llogarit metrikat
 - `SMAPE`
 - `R²`
 
-Në ekzekutimin e raportuar, rezultatet kanë qenë:
+Në aspektin e vlerësimit real në njësinë e `PM2.5`, modeli ka raportuar:
 
-- `MAE = 0.800051`
-- `RMSE = 1.005971`
-- `MAPE_pct = 357.542306`
-- `SMAPE_pct = 108.638466`
-- `R2 = 0.331006`
-- `n_eval_points = 1403`
+Në `validation`:
+
+- `MAE = 1.2160`
+- `RMSE = 1.9520`
+- `MAPE = 17.31%`
+- `SMAPE = 16.09%`
+- `R² = 0.7406`
+
+Në `test`:
+
+- `MAE = 2.6918`
+- `RMSE = 4.3210`
+- `MAPE = 23.49%`
+- `SMAPE = 21.54%`
+- `R² = 0.8147`
+
+Këto rezultate e vendosin `CatBoost` si modelin me performancën më të fortë në `holdout test` brenda familjes supervised, duke ruajtur ekuilibër të mirë mes gabimeve absolute dhe shpjegimit të variancës së `PM2.5`.
 
 #### Fragment kyç i kodit: metrikat
 
@@ -1895,63 +1899,153 @@ Skripta ruan këto output-e:
 - `data/phase_2/supervised/catboost/catboost_run_info.json`
   Përmbledhje e konfigurimit dhe output-eve.
 
-#### Vizualizimi interaktiv
+#### Vizualizimet
 
-Skripta përfshin edhe ndërtimin e një grafiku interaktiv `Observed vs Predicted` me Plotly, ku parashikohet ruajtja e figurave në:
+Grafiku kryesor i parashikimit:
+
+![CatBoost Actual vs Predicted](pictures/phase_2/supervised/catboost/catboost_actual_vs_predicted.png)
+
+Kjo figurë tregon se `CatBoost` ndjek relativisht mirë dinamikën e serisë reale dhe kap pjesën më të madhe të luhatjeve kryesore në test set.
+
+Diagnostika e residualeve:
+
+![CatBoost Residual Diagnostics](pictures/phase_2/supervised/catboost/catboost_residual_diagnostics.png)
+
+Kjo figurë ndihmon të shihet shpërndarja e gabimeve dhe nëse residualet mbeten të përqendruara rreth zeros apo shfaqin devijime sistematike.
+
+Rëndësia e feature-ave:
+
+![CatBoost Feature Importance](pictures/phase_2/supervised/catboost/catboost_feature_importance.png)
+
+Kjo figurë tregon cilët faktorë kohorë, meteorologjikë dhe energjetikë kanë kontribuar më shumë në parashikimin e `PM2.5`.
+
+Tabela përmbledhëse e metrikave:
+
+![CatBoost Metrics Table](pictures/phase_2/supervised/catboost/catboost_metrics_table.png)
+
+Kjo figurë përmbledh në një vend metrikat kryesore të modelit dhe e bën më të lehtë krahasimin me `LightGBM` dhe `SARIMAX`.
+
+Pamja statike e forecast-it interaktiv:
+
+![CatBoost Interactive Forecast](pictures/phase_2/supervised/catboost/catboost_forecast_interactive.png)
+
+Kjo figurë paraqet të njëjtin forecast në format të përshtatshëm për dokumentim dhe e bën më të qartë sjelljen kohore të modelit në test set.
+
+Përveç figurave statike, është ruajtur edhe vizualizimi interaktiv:
 
 - `pictures/phase_2/supervised/catboost/catboost_forecast_interactive.html`
 - `pictures/phase_2/supervised/catboost/catboost_forecast_interactive.png`
 
-Në versionin aktual të repo-s, krahas figurës interaktive janë gjeneruar edhe figurat statike të standardizuara për krahasim:
-
-- `pictures/phase_2/supervised/catboost/catboost_actual_vs_predicted.png`
-- `pictures/phase_2/supervised/catboost/catboost_residual_diagnostics.png`
-- `pictures/phase_2/supervised/catboost/catboost_feature_importance.png`
-- `pictures/phase_2/supervised/catboost/catboost_metrics_table.png`
+Ky vizualizim lejon inspektim më të detajuar të sjelljes së parashikimit në boshtin kohor dhe është veçanërisht i vlefshëm në prezantim.
 
 ---
 
 ### LightGBM për parashikimin e PM2.5
 
+Përveç `CatBoost`, në këtë projekt është përdorur edhe `LightGBM`, një model gradient boosting shumë i përshtatshëm për të dhëna tabulare, trajnim të shpejtë dhe interpretim të qartë përmes `feature importance`.
+
+Implementimi ndodhet në:
+
+- `src/phase_2/supervised/lightgbm_model/lightgbm_model.py`
+
 #### Pse LightGBM?
 
-- **Shpejtësi dhe efikasitet:** Algoritmi përdor _Gradient Boosting_ të bazuar në pemë, duke ofruar performancë të lartë në të dhëna tabelare.
-- **Qartësi analitike (Feature Importance):** Ofron transparencë të plotë mbi peshën që ka secili faktor (prodhimi i energjisë elektrike, era, temperatura) në rezultatin final.
+Ky model është zgjedhur sepse:
 
-#### 1. Skenari izolues (Modeli baseline)
+- është shumë efikas në trajnim edhe kur përdoren ndarje të shumta kohore;
+- funksionon shumë mirë me feature-a numerike të përgatitura nga pipeline-i i fazës së parë;
+- ofron interpretim të drejtpërdrejtë të rolit të secilit feature;
+- dhe është një benchmark shumë i fortë për krahasim me `CatBoost` dhe `SARIMAX`.
 
-Në këtë fazë, modeli u trajnua duke përdorur ekskluzivisht prodhimin e energjisë dhe kushtet meteorologjike, pa përfshirë informacion mbi ndotjen e orëve të kaluara.
+#### Input
 
-<img width="800" height="120" alt="image" src="https://github.com/user-attachments/assets/8f29a1b5-b0c6-4f6f-9358-e43522753493" /> <br />
+Modeli përdor si dataset hyrës:
 
-- **R² Score:** 0.1944
-- **Konstatimi:** Rezultati prej ~19% është një gjetje e rëndësishme. Kjo vërteton shkencërisht se sado të sakta të jenë të dhënat e motit apo raportimet e energjisë, PM2.5 nuk mund të parashikohet saktë vetëm përmes inputeve të çastit, pasi grimcat kanë një natyrë të lartë akumuluese në atmosferë.
+- `data/phase_1/4E_selected_dataset.csv`
 
-#### 2. Modeli dinamik (Skenari me "lags")
+#### Target
 
-Për të rregulluar këtë dhe për t'u dhënë kuptim faktorëve tanë kryesorë, modeli u përmirësua duke përfshirë variablat autogresive **pm25_lag_1** dhe **pm25_lag_24** (kujtesa e ajrit). Kjo rriti saktësinë në mënyrë drastike nga **0.19 në 0.73**.
+Target-i i modelit është:
 
-<img width="800" height="120" alt="image" src="https://github.com/user-attachments/assets/7a87d2be-a7ae-47b8-a219-3c9c764669d7" /> <br />
+- `pm25`
 
-**Roli i motit dhe energjisë në modelin e ri:**
-Përfshirja e _lags_ nuk i zhvlerëson variablat tona, por i vendos në kontekstin e duhur fizik:
+#### Strategjia e modelimit
 
-- **Gjendja bazë:** Ndotja paraprake (`lag`) përcakton sasinë e smogut që tashmë gjendet në atmosferë.
-- **Katalizatorët:** Prodhimi i energjisë dhe moti veprojnë si agjentët kryesorë që rrisin këtë bazë (përmes emetimeve shtesë) ose e ulin atë (përmes shpërndarjes nga era).
+Në këtë model janë përdorur dy skenarë:
 
-#### Rezultatet dhe vizualizimet
+- **Baseline model**, ku përdoren vetëm feature-at e dataset-it final pa lag features;
+- **Improved model**, ku shtohen edhe `pm25_lag_1` dhe `pm25_lag_24`.
 
-**Rëndësia e veçorive:**
-Analiza e fitimit (gain) vërteton hipotezën e projektit tonë: ndërkohë që inercia kohore (`lag`) vendos bazën, **temperatura** dhe **prodhimi i energjisë** renditen menjëherë pas saj si faktorët e jashtëm me ndikimin më të lartë në luhatjen e cilësisë së ajrit.
+Për krahasimin e harmonizuar në fazën e dytë është përdorur skenari:
 
-![Feature Importance](pictures/phase_2/supervised/lightgbm_improved/lightgbm_feature_importance.png)
+- `Improved model`
 
-**Parashikimi vs Realiteti:**
-Grafiku tregon se modeli i përmirësuar dinamik arrin të ndjekë me saktësi pikat ekstreme (peaks) të ndotjes gjatë kombinimit të prodhimit të lartë me kushtet atmosferike jo të favorshme.
+Kjo është edhe zgjedhja më e arsyeshme metodologjikisht, sepse e vendos modelin në të njëjtin kontekst fizik me problemin real të parashikimit të `PM2.5`: ndotja nuk varet vetëm nga moti dhe energjia në orën aktuale, por edhe nga gjendja e saj në orët e mëparshme.
 
-![Actual vs Predicted](pictures/phase_2/supervised/lightgbm_improved/lightgbm_actual_vs_predicted.png)
+#### Fragment kyç i kodit: konfigurimi i skenarit
 
-Në përditësimin më të fundit të këtij modeli janë raportuar edhe metrikat relative të gabimit:
+```python
+INPUT_PATH = BASE_DIR / "data" / "phase_1" / "4E_selected_dataset.csv"
+INCLUDE_ADDITIONAL_FEATURES = True
+SCENARIO_NAME = "improved_model" if INCLUDE_ADDITIONAL_FEATURES else "baseline_model"
+
+def load_and_preprocess_data(use_lags=True):
+    df = pd.read_csv(INPUT_PATH)
+    df['datetime'] = pd.to_datetime(df['datetime'])
+    df = df.sort_values('datetime')
+    target = 'pm25'
+
+    if use_lags:
+        for lag in [1, 24]:
+            df[f'pm25_lag_{lag}'] = df[target].shift(lag)
+
+    df = df.dropna().reset_index(drop=True)
+    return df, target
+```
+
+#### Validimi korrekt pa leakage
+
+Ndryshe nga ndarja klasike rastësore, `LightGBM` është vlerësuar me:
+
+- `TimeSeriesSplit(n_splits=5)`
+
+Kjo do të thotë se në secilin fold modeli trajnohet mbi të kaluarën dhe testohet mbi një segment më të ri kohor, pa i përzier observimet. Kjo është shumë e rëndësishme akademikisht, sepse mban rendin kohor dhe shmang leakage.
+
+Pasi target-i `pm25` në këtë projekt është i skaluar dhe i transformuar nga faza e parë, skripta e kthen parashikimin përsëri në njësi reale `µg/m³` përpara llogaritjes së metrikave. Pra, `MAE`, `RMSE`, `MAPE` dhe `SMAPE` në raportim interpretohen në hapësirën reale të `PM2.5`.
+
+#### Fragment kyç i kodit: validimi kohor
+
+```python
+tscv = TimeSeriesSplit(n_splits=5)
+
+for fold, (train_idx, test_idx) in enumerate(tscv.split(X)):
+    X_train, X_test = X.iloc[train_idx], X.iloc[test_idx]
+    y_train, y_test = y.iloc[train_idx], y.iloc[test_idx]
+```
+
+#### Parametrat kryesorë të modelit
+
+Në konfigurimin aktual janë përdorur:
+
+- `n_estimators = 1000`
+- `learning_rate = 0.05`
+- `num_leaves = 31`
+- `importance_type = "gain"`
+- `early_stopping_rounds = 50`
+
+Ky konfigurim krijon një model mjaftueshëm fleksibël për marrëdhënie jo-lineare, por njëkohësisht të qëndrueshëm për validim me disa folds kohore.
+
+#### Rezultatet e raportuara
+
+Në skenarin `baseline`, pa lag features, modeli ka raportuar:
+
+- `R² = 0.1944`
+- `RMSE = 5.9440`
+- `MAE = 4.1805`
+
+Ky rezultat është i rëndësishëm metodologjikisht, sepse tregon se vetëm feature-at meteorologjikë dhe energjetikë nuk mjaftojnë për ta kapur mirë sjelljen e `PM2.5` pa komponentin autoregresiv.
+
+Në skenarin `improved`, me `pm25_lag_1` dhe `pm25_lag_24`, modeli ka arritur:
 
 - `MAE = 2.0827`
 - `RMSE = 3.2537`
@@ -1959,24 +2053,63 @@ Në përditësimin më të fundit të këtij modeli janë raportuar edhe metrika
 - `MAPE = 20.78%`
 - `SMAPE = 19.90%`
 
-#### Konkluzioni
+Pra, kalimi nga `baseline` në `improved model` e ngre ndjeshëm performancën dhe konfirmon që kujtesa kohore e ndotjes është thelbësore për parashikim të saktë.
 
-Ky eksperiment vërteton se ndikimi i termocentraleve dhe motit në Prishtinë është shumë domethënës, por efekti i tyre i vërtetë mund të matet dhe parashikohet saktë vetëm kur modeli merr parasysh natyrën akumuluese të smogut në atmosferë.
+Sipas `metrics_summary.txt`, pesë feature-at më të rëndësishme në konfigurimin final kanë dalë:
 
-#### Artifaktet e gjeneruara
+- `pm25_lag_1 = 79.37%`
+- `hour_cos = 4.14%`
+- `pm25_lag_24 = 3.42%`
+- `hour_sin = 3.12%`
+- `total_generation_mw = 1.86%`
 
-- `baseline_model.joblib` / `improved_model.joblib`: Modelet e ruajtura.
-- `metrics_summary.txt`: Përmbledhja e metrikave (`MAE`, `RMSE`, `R²`, `MAPE`, `SMAPE`).
-- `feature_importance.csv` dhe `feature_importance.png`: Pesha e saktë e ndikimit për çdo variabël.
-- `actual_vs_predicted.png`: Grafiku kohor i përputhshmërisë mes parashikimit të modelit dhe ndotjes reale.
-- `learning_curve.png`: Kurba e rënies së gabimit gjatë procesit të trajnimit të modelit.
-- Për dokumentim të harmonizuar në fazën e dytë përdoren edhe:
-  - `data/phase_2/supervised/lightgbm_improved/feature_importance.csv`
-  - `data/phase_2/supervised/lightgbm_improved/metrics_summary.txt`
-  - `pictures/phase_2/supervised/lightgbm_improved/lightgbm_actual_vs_predicted.png`
-  - `pictures/phase_2/supervised/lightgbm_improved/lightgbm_feature_importance.png`
-  - `pictures/phase_2/supervised/lightgbm_improved/lightgbm_learning_curve.png`
-  - `pictures/phase_2/supervised/lightgbm_improved/lightgbm_metrics_table.png`
+Kjo tregon qartë se `LightGBM` e konsideron komponentin kohor si dominues, por gjithashtu ruan rol të dukshëm për ritmin ditor dhe prodhimin e energjisë.
+
+#### Vizualizimet
+
+Rëndësia e feature-ave:
+
+![LightGBM Feature Importance](pictures/phase_2/supervised/lightgbm_improved/lightgbm_feature_importance.png)
+
+Kjo figurë tregon peshën relative të feature-ave në modelin final dhe e bën shumë të qartë dominimin e lag features.
+
+Krahasimi mes vlerave reale dhe parashikimit:
+
+![LightGBM Actual vs Predicted](pictures/phase_2/supervised/lightgbm_improved/lightgbm_actual_vs_predicted.png)
+
+Kjo figurë paraqet sa mirë modeli ndjek dinamikën reale të `PM2.5` në fold-in e fundit të validimit kohor.
+
+Kurba e të mësuarit:
+
+![LightGBM Learning Curve](pictures/phase_2/supervised/lightgbm_improved/lightgbm_learning_curve.png)
+
+Kjo figurë ndihmon të shihet ecuria e humbjes gjatë trajnimit dhe nëse modeli stabilizohet pa overfitting të theksuar.
+
+Tabela përmbledhëse e metrikave:
+
+![LightGBM Metrics Table](pictures/phase_2/supervised/lightgbm_improved/lightgbm_metrics_table.png)
+
+Kjo figurë i vendos në një kornizë të vetme metrikat kryesore të `LightGBM` për krahasim me `CatBoost` dhe `SARIMAX`.
+
+#### Artefaktet e gjeneruara nga LightGBM
+
+Skripta native e modelit ruan:
+
+- `src/phase_2/supervised/lightgbm_model/improved_model/improved_model.joblib`
+- `src/phase_2/supervised/lightgbm_model/improved_model/metrics_summary.txt`
+- `src/phase_2/supervised/lightgbm_model/improved_model/feature_importance.csv`
+- `src/phase_2/supervised/lightgbm_model/improved_model/feature_importance.png`
+- `src/phase_2/supervised/lightgbm_model/improved_model/actual_vs_predicted.png`
+- `src/phase_2/supervised/lightgbm_model/improved_model/learning_curve.png`
+
+Për krahasimin e harmonizuar në fazën e dytë përdoren edhe:
+
+- `data/phase_2/supervised/lightgbm_improved/metrics_summary.txt`
+- `data/phase_2/supervised/lightgbm_improved/feature_importance.csv`
+- `pictures/phase_2/supervised/lightgbm_improved/lightgbm_actual_vs_predicted.png`
+- `pictures/phase_2/supervised/lightgbm_improved/lightgbm_feature_importance.png`
+- `pictures/phase_2/supervised/lightgbm_improved/lightgbm_learning_curve.png`
+- `pictures/phase_2/supervised/lightgbm_improved/lightgbm_metrics_table.png`
 
 ---
 
@@ -2019,10 +2152,6 @@ Në termat e projektit tonë, `SARIMAX` i përgjigjet drejtpërdrejt pyetjes në
 Skripta përdor si lokacion standard dataset-in final:
 
 - `data/phase_1/4E_selected_dataset.csv`
-
-Për kompatibilitet me versionet e mëhershme të repo-s, ajo kontrollon edhe fallback-un:
-
-- `data/4E_selected_dataset.csv`
 
 Në ekzekutimin aktual të raportuar në repo, input-i real ka qenë:
 
@@ -2215,13 +2344,25 @@ Grafiku kryesor i parashikimit:
 
 ![SARIMAX Actual vs Predicted](pictures/phase_2/supervised/sarimax/sarimax_actual_vs_predicted.png)
 
+Kjo figurë tregon përputhjen mes vlerave reale të `PM2.5` dhe forecast-it të modelit në test set.
+
 Diagnostika e residualeve:
 
 ![SARIMAX Residual Diagnostics](pictures/phase_2/supervised/sarimax/sarimax_residual_diagnostics.png)
 
+Kjo figurë ndihmon të vlerësohet nëse residualet janë të balancuara dhe nëse mbeten struktura sistematike të pa kapura nga modeli.
+
 Paneli shtesë i koeficientëve më të fortë:
 
 ![SARIMAX Coefficients](pictures/phase_2/supervised/sarimax/sarimax_coefficients.png)
+
+Kjo figurë përmbledh parametrat më domethënës të modelit dhe e bën më të lehtë interpretimin statistik të komponentëve autoregresivë, sezonalë dhe exogenous.
+
+Tabela përmbledhëse e metrikave:
+
+![SARIMAX Metrics Table](pictures/phase_2/supervised/sarimax/sarimax_metrics_table.png)
+
+Kjo figurë i vendos në një vend metrikat kryesore të `SARIMAX` dhe ndihmon krahasimin e tij me modelet e tjera supervised.
 
 Përveç figurave statike, është ruajtur edhe vizualizimi interaktiv:
 
@@ -2430,6 +2571,76 @@ Pra, gjatë ekzekutimit përdoruesi mund të shohë:
 - sa pika janë klasifikuar si noise,
 - dhe ku janë ruajtur output-et.
 
+#### Rezultatet e raportuara
+
+Në konfigurimin aktual të repo-s, `HDBSCAN` ka prodhuar këto rezultate kryesore:
+
+- `Rows used = 9347`
+- `Number of clusters (excluding noise) = 2`
+- `Noise ratio = 73.54%`
+- `Silhouette score = 0.2658`
+- `Davies-Bouldin score = 1.2785`
+- `Calinski-Harabasz score = 266.11`
+- `Average cluster persistence = 0.0323`
+
+Interpretimi akademik i këtyre rezultateve është se `HDBSCAN` po sillet si një model density-based konservativ: ai ruan vetëm dy struktura të dendura si cluster-e bazë, ndërsa pjesën më të madhe të vëzhgimeve i klasifikon si `noise`. Në të dhëna reale mjedisore kjo nuk është domosdoshmërisht dobësi, sepse tregon që modeli po shmang grupimet artificiale dhe po i pranon vetëm regjimet më të qëndrueshme.
+
+#### Vizualizimet
+
+Tabela përmbledhëse e metrikave:
+
+![HDBSCAN Metrics Table](pictures/phase_2/unsupervised/hdbscan/hdbscan_metrics_table.png)
+
+Kjo figurë përmbledh metrikat kryesore të modelit dhe e bën më të qartë profilin konservativ të `HDBSCAN`.
+
+Pamja 2D e cluster-ëve në hapësirën e reduktuar:
+
+![HDBSCAN UMAP](pictures/phase_2/unsupervised/hdbscan/hdbscan_umap_interactive.png)
+
+Kjo figurë paraqet cluster-at dhe pikat `noise` në embedding-un `UMAP`, pra pamjen vizuale më të drejtpërdrejtë të ndarjes së bërë nga modeli.
+
+Profili i `PM2.5` sipas cluster-it:
+
+![HDBSCAN PM25 by Cluster](pictures/phase_2/unsupervised/hdbscan/hdbscan_pm25_by_cluster.png)
+
+Kjo figurë tregon si ndryshon niveli mesatar i `PM2.5` ndërmjet cluster-ëve bazë të zbuluar nga `HDBSCAN`.
+
+Përmasat relative të cluster-ëve:
+
+![HDBSCAN Cluster Sizes](pictures/phase_2/unsupervised/hdbscan/hdbscan_cluster_sizes.png)
+
+Kjo figurë tregon sa të mëdha janë grupet kryesore të zbuluara dhe sa e përqendruar apo e rrallë mbetet struktura e të dhënave.
+
+Ecuria kohore e `PM2.5` me ngjyrat e cluster-ëve:
+
+![HDBSCAN PM25 Timeline](pictures/phase_2/unsupervised/hdbscan/hdbscan_pm25_timeline.png)
+
+Kjo figurë ndihmon të shihet nëse cluster-at lidhen me periudha të caktuara kohore ose me episode të veçanta të ndotjes.
+
+Pamja e zmadhuar e episodeve më përfaqësuese:
+
+![HDBSCAN PM25 Zoom](pictures/phase_2/unsupervised/hdbscan/hdbscan_pm25_zoom.png)
+
+Kjo figurë e bën më të lehtë identifikimin e periudhave të shkurtra ku cluster-at ndryshojnë më qartë në raport me nivelin e `PM2.5`.
+
+Shpërndarja e vëzhgimeve në raport me energjinë dhe `PM2.5`:
+
+![HDBSCAN Scatter](pictures/phase_2/unsupervised/hdbscan/hdbscan_scatter.png)
+
+Kjo figurë e bën më të qartë si ndahen vëzhgimet dhe ku përqendrohen pikat e klasifikuara si `noise`.
+
+Shpërndarja e probabilitetit të anëtarësimit:
+
+![HDBSCAN Confidence Distribution](pictures/phase_2/unsupervised/hdbscan/hdbscan_confidence_distribution.png)
+
+Kjo figurë tregon sa të sigurt janë etiketimet e modelit për pikat që nuk janë `noise`.
+
+Paneli i ndryshimit të feature-ave:
+
+![HDBSCAN Feature Shift Panel](pictures/phase_2/unsupervised/hdbscan/hdbscan_feature_shift_panel.png)
+
+Kjo figurë përmbledh cilat tipare dallojnë më shumë ndërmjet cluster-ëve dhe mesatares globale të dataset-it.
+
 #### Artefaktet e gjeneruara nga HDBSCAN
 
 Skripta ruan këto output-e:
@@ -2516,10 +2727,6 @@ Nga pikëpamja akademike, kjo e forcon shumë projektin, sepse demonstron dy fil
 Ashtu si te `SARIMAX`, skripta përdor si lokacion standard dataset-in final:
 
 - `data/phase_1/4E_selected_dataset.csv`
-
-dhe ruan edhe një fallback për kompatibilitet me strukturat e mëhershme:
-
-- `data/4E_selected_dataset.csv`
 
 Në ekzekutimin aktual është përdorur:
 
@@ -2705,17 +2912,61 @@ Krahasimi i kandidatëve gjatë model selection:
 
 ![GMM Model Selection](pictures/phase_2/unsupervised/gaussian_mixture/gmm_model_selection.png)
 
+Kjo figurë tregon si janë krahasuar konfigurimet e ndryshme sipas `BIC`, `AIC` dhe metrikave të tjera për të zgjedhur modelin final.
+
+Tabela përmbledhëse e metrikave:
+
+![GMM Metrics Table](pictures/phase_2/unsupervised/gaussian_mixture/gmm_metrics_table.png)
+
+Kjo figurë përmbledh rezultatet kryesore të modelit final në një format të përshtatshëm për krahasim me `HDBSCAN`.
+
 Heatmap-i i profileve të cluster-ëve:
 
 ![GMM Cluster Profile Heatmap](pictures/phase_2/unsupervised/gaussian_mixture/gmm_cluster_profile_heatmap.png)
+
+Kjo figurë ndihmon të shihet cilat feature-a janë karakteristike për secilin cluster në raport me të tjerët.
+
+Përmasat relative të cluster-ëve:
+
+![GMM Cluster Sizes](pictures/phase_2/unsupervised/gaussian_mixture/gmm_cluster_sizes.png)
+
+Kjo figurë tregon sa të balancuar janë gjashtë cluster-at e modelit final.
 
 Profili i `PM2.5` sipas cluster-it:
 
 ![GMM PM25 by Cluster](pictures/phase_2/unsupervised/gaussian_mixture/gmm_pm25_by_cluster.png)
 
+Kjo figurë paraqet dallimet e nivelit mesatar të `PM2.5` ndërmjet cluster-ëve të zbuluar nga modeli.
+
+Ecuria kohore e cluster-ëve:
+
+![GMM PM25 Timeline](pictures/phase_2/unsupervised/gaussian_mixture/gmm_pm25_timeline.png)
+
+Kjo figurë e vendos etiketimin e cluster-ëve mbi boshtin kohor dhe ndihmon në interpretimin e regjimeve mjedisore përgjatë serisë.
+
+Pamja e zmadhuar e episodeve më përfaqësuese:
+
+![GMM PM25 Zoom](pictures/phase_2/unsupervised/gaussian_mixture/gmm_pm25_zoom.png)
+
+Kjo figurë e bën më të qartë sjelljen e cluster-ëve në periudha më të shkurtra dhe më intensive të `PM2.5`.
+
 Shpërndarja e cluster-ëve në raport me energjinë dhe `PM2.5`:
 
 ![GMM Scatter](pictures/phase_2/unsupervised/gaussian_mixture/gmm_scatter.png)
+
+Kjo figurë tregon si ndahen cluster-at në raport me prodhimin e energjisë dhe ndotjen reale.
+
+Shpërndarja e besimit të anëtarësimit:
+
+![GMM Confidence Distribution](pictures/phase_2/unsupervised/gaussian_mixture/gmm_confidence_distribution.png)
+
+Kjo figurë paraqet sa i sigurt është modeli për etiketimin e observimeve në cluster-et përkatëse.
+
+Paneli i devijimeve të feature-ave:
+
+![GMM Feature Shift Panel](pictures/phase_2/unsupervised/gaussian_mixture/gmm_feature_shift_panel.png)
+
+Kjo figurë përmbledh feature-at që e dallojnë më fort secilin cluster nga mesatarja globale e dataset-it.
 
 Vizualizimi interaktiv në hapësirën e reduktuar me `PCA` ruhet në:
 
@@ -2757,6 +3008,7 @@ Skripta ruan këto output-e:
 
 - `pictures/phase_2/unsupervised/gaussian_mixture/gmm_model_selection.png`
 - `pictures/phase_2/unsupervised/gaussian_mixture/gmm_cluster_profile_heatmap.png`
+- `pictures/phase_2/unsupervised/gaussian_mixture/gmm_cluster_sizes.png`
 - `pictures/phase_2/unsupervised/gaussian_mixture/gmm_pca_interactive.html`
 - `pictures/phase_2/unsupervised/gaussian_mixture/gmm_pm25_by_cluster.png`
 - `pictures/phase_2/unsupervised/gaussian_mixture/gmm_pm25_timeline.png`
@@ -2770,51 +3022,179 @@ Skripta ruan këto output-e:
 
 ### Isolation Forest për analizë unsupervised
 
+`Isolation Forest` është qasja unsupervised e përdorur për anomaly detection. Ndryshe nga `HDBSCAN` dhe `Gaussian Mixture`, ky model nuk synon të ndërtojë cluster-a, por të izolojë observimet që devijojnë nga sjellja normale e kombinimit mes motit, energjisë dhe ndotjes.
+
+Implementimi ndodhet në:
+
+- `src/phase_2/unsupervised/isolation_forest_model/isolation_forest_model.py`
+
+Për gjenerimin e output-eve të harmonizuara të fazës së dytë përdoret edhe:
+
+- `src/phase_2/unsupervised/isolation_forest_model/isolation_forest_extended_outputs.py`
+
 #### Pse Isolation Forest?
-Ndryshe nga modelet e tjera që përpiqen të mësojnë se çfarë është "normale", ky algoritëm izolon drejtpërdrejt pikat që sillen në mënyrë të pazakontë (anomalitë). Modeli nuk kërkon thjesht vlera ekstreme (p.sh. ajër shumë i ndotur), por gjen situata ku variablat nuk përputhen logjikisht me njëra-tjetrën (p.sh. ndotje e ulët kur prodhimi i energjisë është i lartë).
 
-#### Identifikimi i goditjeve kohore (Zoom-in Analysis)
-Për të kuptuar saktësinë e modelit, kemi zmadhuar dritaren kohore në periudhën kritike Nëntor–Dhjetor 2025.
+Ky model është zgjedhur sepse:
 
-![Isolation Forest Zoom-in PM2.5](pictures/phase_2/unsupervised/isolation_forest/isolation_forest_pm25_zoom.png)
+- funksionon shumë mirë për zbulimin e rasteve të rralla në dataset-e me shumë feature-a numerike;
+- nuk kërkon etiketa paraprake për anomalitë;
+- është i përshtatshëm kur duam të kapim jo vetëm vlera të larta të `PM2.5`, por kombinime jo të zakonshme të variablave;
+- dhe e plotëson shumë mirë analizën clustering të `HDBSCAN` dhe `GMM`.
 
-Konstatimi: Siç shihet nga pikat e kuqe, modeli nuk gjeneron alarme të rreme gjatë luhatjeve të zakonshme. Ai shënjestron me saktësi vetëm momentet (peaks) kur niveli i PM2.5 del plotësisht jashtë kontrollit apo ritmit sezonal.
+Në kontekstin e projektit tonë, kjo do të thotë se `Isolation Forest` nuk pyet vetëm “kur ajri është i ndotur?”, por edhe “kur sjellja e sistemit është e pazakontë krahasuar me modelet tipike meteorologjike dhe energjetike?”.
 
-#### Korrelacioni vizual: Ndotja vs. Energjia (Scatter Plot)
-Ky grafik ballafaqon prodhimin total të energjisë (MW) me nivelet e PM2.5 për të parë se ku "thyhet" normaliteti.
+#### Input
 
-![Isolation Forest Energy vs PM2.5 Scatter](pictures/phase_2/unsupervised/isolation_forest/isolation_forest_scatter.png)
+Modeli përdor si hyrje:
 
-Interpretimi i shpërndarjes:
+- `data/phase_1/4E_selected_dataset.csv`
 
-Reja e pikave gri (Normaliteti): Përfaqëson 95% të ditëve ku prodhimi dhe ndotja ndjekin një trend të parashikueshëm.
+#### Feature-at e përdorura
 
-Korniza e kuqe (Anomalitë): Anomalitë grumbullohen në skajet ekstreme. Vlen të theksohet se pikat në pjesën e poshtme djathtas (prodhim i lartë, ndotje e ulët) janë lënë si gri nga modeli kur të dhënat e motit kanë treguar prani të erës apo shiut, duke vërtetuar se modeli kupton kontekstin meteorologjik.
+Sipas `isolation_forest_run_info.json`, modeli është trajnuar mbi 13 feature-a:
 
-#### Skenarët kryesorë të zbuluar
-Nga analiza e 100 anomalive më ekstreme, veçuam dy raste që vërtetojnë lidhjen mes energjisë dhe mjedisit:
+- `hour_sin`
+- `hour_cos`
+- `month_sin`
+- `month_cos`
+- `pollution_stagnation_index`
+- `wind_x_vector`
+- `wind_y_vector`
+- `total_generation_mw`
+- `temperature_2m (°C)`
+- `rain (mm)`
+- `relative_humidity_2m (%)`
+- `wind_speed_10m (km/h)`
+- `pm25`
 
-"Mrekullia e 27 Nëntorit" (Anomalia e ajrit të pastër):
-Modeli kapi një moment ku KEK-u po punonte me kapacitet maksimal dimëror, por ndotja ishte pothuajse zero. Kjo u izolua si anomali pasi theu lidhjen logjike prodhim-ndotje; shpjegimi fizik ishte prania e një stuhie që pastroi ajrin pavarësisht emetimeve.
+Pra, ndryshe nga `HDBSCAN` dhe `GMM`, këtu edhe `pm25` përdoret si pjesë e hapësirës së anomaly detection. Kjo është e arsyeshme, sepse qëllimi i modelit nuk është të zbulojë profile mjedisore pa target, por të identifikojë raste kur kombinimi i plotë i sistemit sillet në mënyrë të pazakontë.
 
-"Ndotja e Natës" (2 Prill 2024, ora 04:00):
-Në një kohë kur trafiku i qytetit është zero, modeli zbuloi një rritje të papritur të PM2.5. Duke parë variablat e energjisë, u vërtetua se fiks në atë orë prodhimi ishte në mbingarkesë, duke bërë lidhjen direkte mes punës së termocentraleve dhe smogut nocturn.
+#### Fragment kyç i kodit: konfigurimi i modelit
 
-#### Konkluzioni
-Ndërkohë që algoritmet supervised si LightGBM parashikojnë trendin e përgjithshëm, Isolation Forest shërben si një "radar" për të identifikuar dështimet e sistemit dhe goditjet mjedisore. Ky model vërteton se ndikimi i energjisë në ajër është i pranishëm, por mund të modifikohet drastikisht nga kushtet atmosferike.
+```python
+iso_forest = IsolationForest(
+    n_estimators=100,
+    contamination=0.05,
+    random_state=42,
+    n_jobs=-1
+)
+```
 
-Artifaktet e gjeneruara
+Ky konfigurim i thotë modelit të izolojë afërsisht `5%` të observimeve si raste potencialisht anormale.
 
-![Isolation Forest PM2.5 Trend](pictures/phase_2/unsupervised/isolation_forest/isolation_forest_pm25.png)
+#### Rezultatet e raportuara
+
+Në ekzekutimin e harmonizuar të fazës së dytë janë raportuar:
+
+- `Rows used = 9347`
+- `Number of features = 13`
+- `Number of anomalies = 468`
+- `Anomaly ratio = 5.01%`
+- `Contamination = 0.05`
+- `n_estimators = 100`
+- `Mean anomaly severity = 0.0267`
+- `PM2.5 mean (normal) = 10.42`
+- `PM2.5 mean (anomaly) = 8.07`
+- `Total generation mean (normal) = 555.29 MW`
+- `Total generation mean (anomaly) = 574.12 MW`
+
+Këtu një pikë shumë interesante akademikisht është se anomalitë nuk janë domosdoshmërisht orët me `PM2.5` më të lartë. Përkundrazi, mesatarja e `PM2.5` te anomalitë është më e ulët sesa te grupi normal, ndërsa prodhimi mesatar i energjisë është më i lartë. Kjo tregon se modeli po kap pikërisht kombinime jo të zakonshme, si p.sh. ajër relativisht i pastër në kushte ku pritet ndotje më e lartë.
+
+#### Interpretimi i anomalive
+
+Nga `isolation_forest_feature_summary.csv`, feature-at që dallojnë më së shumti grupin anormal nga ai normal janë:
+
+- `rain (mm)`
+- `wind_speed_10m (km/h)`
+- `pollution_stagnation_index`
+- `wind_x_vector`
+- `month_cos`
+- `pm25`
+
+Kjo do të thotë se anomalitë janë të lidhura fort me ndryshime të reshjeve, erës dhe stagnation-it atmosferik, pra me situata ku kushtet meteorologjike modifikojnë sjelljen e zakonshme të ndotjes.
+
+Nga `isolation_forest_top_anomalies.csv` del qartë edhe një tipar interesant: disa nga rastet më ekstreme janë orë me prodhim shumë të lartë energjie dhe `PM2.5` shumë të ulët. Kjo e forcon interpretimin që modeli po kap raste të “ajrit të pastër anomal”, jo vetëm episode smogu.
+
+#### Vizualizimet
+
+Tabela përmbledhëse e metrikave:
+
+![Isolation Forest Metrics Table](pictures/phase_2/unsupervised/isolation_forest/isolation_forest_metrics_table.png)
+
+Kjo figurë përmbledh në një vend të vetëm parametrat dhe metrikat kryesore të modelit.
+
+Ecuria kohore e anomalive në `PM2.5`:
+
+![Isolation Forest PM25 Trend](pictures/phase_2/unsupervised/isolation_forest/isolation_forest_pm25.png)
+
+Kjo figurë tregon se ku shfaqen anomalitë mbi serinë kohore të `PM2.5`.
+
+Ecuria kohore e anomalive në prodhimin e energjisë:
 
 ![Isolation Forest Energy Trend](pictures/phase_2/unsupervised/isolation_forest/isolation_forest_energy.png)
 
-- `pictures/phase_2/unsupervised/isolation_forest/isolation_forest_pm25_zoom.png`: Pamja e zmadhuar e anomalive.
-- `pictures/phase_2/unsupervised/isolation_forest/isolation_forest_scatter.png`: Grafiku i korrelacionit `PM2.5` vs energji.
-- `pictures/phase_2/unsupervised/isolation_forest/isolation_forest_pm25.png`: Ecuria kohore e anomalive për `PM2.5`.
-- `pictures/phase_2/unsupervised/isolation_forest/isolation_forest_energy.png`: Ecuria kohore e prodhimit energjetik.
-- `pictures/phase_2/unsupervised/isolation_forest/isolation_forest_score_distribution.png`: Shpërndarja e score-ve të anomalive.
-- `data/phase_2/unsupervised/isolation_forest/isolation_forest_top_anomalies.csv`: Regjistri i rasteve më anormale për analizë të detajuar.
+Kjo figurë e lidh anomaly detection me dimensionin energjetik të problemit.
+
+Pamja e zmadhuar e episodeve më të ndjeshme:
+
+![Isolation Forest PM25 Zoom](pictures/phase_2/unsupervised/isolation_forest/isolation_forest_pm25_zoom.png)
+
+Kjo figurë ndihmon të shihet më qartë sjellja e anomalive në periudhat më kritike kohore.
+
+Shpërndarja `PM2.5` kundrejt energjisë:
+
+![Isolation Forest Scatter](pictures/phase_2/unsupervised/isolation_forest/isolation_forest_scatter.png)
+
+Kjo figurë tregon se ku ndodhen pikat anormale në raport me prodhimin total të energjisë dhe ndotjen reale.
+
+Shpërndarja e score-ve të anomalive:
+
+![Isolation Forest Score Distribution](pictures/phase_2/unsupervised/isolation_forest/isolation_forest_score_distribution.png)
+
+Kjo figurë paraqet sa fort dallohen rastet anormale nga pjesa tjetër e observimeve.
+
+Profili `Normal vs Anomaly` për `PM2.5`:
+
+![Isolation Forest PM25 Profile](pictures/phase_2/unsupervised/isolation_forest/isolation_forest_pm25_profile.png)
+
+Kjo figurë krahason sjelljen mesatare të `PM2.5` mes observimeve normale dhe anormale.
+
+Grafiku i devijimeve kryesore të feature-ave:
+
+![Isolation Forest Feature Shift](pictures/phase_2/unsupervised/isolation_forest/isolation_forest_feature_shift.png)
+
+Kjo figurë tregon cilat feature-a kanë diferencat më të mëdha absolute mes anomalive dhe observimeve normale.
+
+Paneli i plotë i devijimeve të feature-ave:
+
+![Isolation Forest Feature Shift Panel](pictures/phase_2/unsupervised/isolation_forest/isolation_forest_feature_shift_panel.png)
+
+Kjo figurë e zgjeron interpretimin duke treguar profilin krahasues të feature-ave kryesore.
+
+#### Artefaktet e gjeneruara nga Isolation Forest
+
+Për dokumentimin e harmonizuar në fazën e dytë ruhen:
+
+- `data/phase_2/unsupervised/isolation_forest/isolation_forest_scored_dataset.csv`
+- `data/phase_2/unsupervised/isolation_forest/isolation_forest_metrics.csv`
+- `data/phase_2/unsupervised/isolation_forest/isolation_forest_feature_summary.csv`
+- `data/phase_2/unsupervised/isolation_forest/isolation_forest_top_anomalies.csv`
+- `data/phase_2/unsupervised/isolation_forest/isolation_forest_run_info.json`
+- `models/isolation_forest_model/isolation_forest_model.pkl`
+- `models/isolation_forest_model/isolation_forest_feature_columns.pkl`
+- `pictures/phase_2/unsupervised/isolation_forest/isolation_forest_pm25.png`
+- `pictures/phase_2/unsupervised/isolation_forest/isolation_forest_energy.png`
+- `pictures/phase_2/unsupervised/isolation_forest/isolation_forest_pm25_zoom.png`
+- `pictures/phase_2/unsupervised/isolation_forest/isolation_forest_scatter.png`
+- `pictures/phase_2/unsupervised/isolation_forest/isolation_forest_score_distribution.png`
+- `pictures/phase_2/unsupervised/isolation_forest/isolation_forest_pm25_profile.png`
+- `pictures/phase_2/unsupervised/isolation_forest/isolation_forest_feature_shift.png`
+- `pictures/phase_2/unsupervised/isolation_forest/isolation_forest_feature_shift_panel.png`
+- `pictures/phase_2/unsupervised/isolation_forest/isolation_forest_metrics_table.png`
+
+Për kompatibilitet me versionin original të modelit ruhet edhe output-i legacy:
+
+- `src/phase_2/unsupervised/isolation_forest_model/isolation_forest_results/top_anomalies_list.csv`
 
 ---
 
@@ -2841,7 +3221,7 @@ Skripta e fundit është veçanërisht e rëndësishme për README dhe raportim,
 - krijon figura krahasuese në `pictures/phase_2/comparison/`;
 - dhe harmonizon vizualizimet statike për modelet supervised dhe unsupervised.
 
-Kjo renditje e seksionit e bën README-n më të natyrshëm akademikisht: fillimisht prezantohen modelet dhe interpretimi i tyre, ndërsa në fund tregohet qartë si mund të riprodhohen rezultatet.
+Kjo renditje e seksionit e bën README-n më të natyrshëm akademikisht: fillimisht prezantohen modelet individuale, pastaj dokumentohet mënyra e ekzekutimit të tyre, dhe më pas jepet krahasimi përmbyllës i rezultateve.
 
 ---
 
@@ -2874,6 +3254,18 @@ Ky panel ndihmon në krahasimin e tre logjikave të ndryshme të interpretimit:
 - koeficientët për `SARIMAX`;
 - dhe rolin e tipareve energjetike, meteorologjike dhe kohore në të tre qasjet.
 
+Krahasimi i gabimeve absolute dhe kuadratike:
+
+![Supervised Error Metrics](pictures/phase_2/comparison/supervised_error_metrics.png)
+
+Kjo figurë tregon dallimet mes `MAE` dhe `RMSE` për modelet supervised dhe e bën më të lehtë dallimin mes performancës mesatare dhe ndjeshmërisë ndaj gabimeve të mëdha.
+
+Krahasimi i `R²` mes modeleve supervised:
+
+![Supervised R2 Comparison](pictures/phase_2/comparison/supervised_r2_comparison.png)
+
+Kjo figurë përmbledh se cili model shpjegon më mirë variancën e `PM2.5` në konfigurimin e vet përkatës të evaluimit.
+
 Për unsupervised, tabela e harmonizuar është kjo:
 
 ![Unsupervised Comparison Table](pictures/phase_2/comparison/unsupervised_comparison_table.png)
@@ -2885,6 +3277,24 @@ Për profilin e `PM2.5` në secilin model unsupervised është gjeneruar edhe fi
 ![Unsupervised PM25 Profiles](pictures/phase_2/comparison/unsupervised_pm25_profiles.png)
 
 Kjo figurë ndihmon shumë në raport, sepse e bën të dukshme si ndryshon niveli mesatar i `PM2.5` ndërmjet cluster-ëve apo ndërmjet grupeve `Normal/Anomaly`.
+
+Krahasimi i numrit të grupeve dhe raportit të pikave speciale:
+
+![Unsupervised Special Ratio And Groups](pictures/phase_2/comparison/unsupervised_special_ratio_and_groups.png)
+
+Kjo figurë përmbledh sa konservativ apo sa granular është secili model unsupervised në ndarjen e të dhënave.
+
+Krahasimi i cilësisë së clustering-ut për modelet clustering:
+
+![Unsupervised Clustering Quality](pictures/phase_2/comparison/unsupervised_clustering_quality.png)
+
+Kjo figurë krahason `HDBSCAN` dhe `Gaussian Mixture` sipas metrikave të brendshme si `silhouette`, `Davies-Bouldin` dhe `Calinski-Harabasz`.
+
+Paneli i përbashkët i devijimeve të feature-ave:
+
+![Unsupervised Feature Panels](pictures/phase_2/comparison/unsupervised_feature_panels.png)
+
+Kjo figurë ndihmon në krahasimin e profileve të feature-ave që karakterizojnë cluster-at ose anomalitë te modelet unsupervised.
 
 ---
 
@@ -3009,6 +3419,7 @@ Pas fazës së dytë të projektit, përveç output-eve të pipeline-it të për
 - `pictures/phase_2/unsupervised/hdbscan/hdbscan_umap_interactive.html`
 - `pictures/phase_2/unsupervised/hdbscan/hdbscan_umap_interactive.png`
 - `pictures/phase_2/unsupervised/hdbscan/hdbscan_pm25_by_cluster.png`
+- `pictures/phase_2/unsupervised/hdbscan/hdbscan_cluster_sizes.png`
 - `pictures/phase_2/unsupervised/hdbscan/hdbscan_pm25_timeline.png`
 - `pictures/phase_2/unsupervised/hdbscan/hdbscan_pm25_zoom.png`
 - `pictures/phase_2/unsupervised/hdbscan/hdbscan_scatter.png`
@@ -3048,6 +3459,7 @@ Pas fazës së dytë të projektit, përveç output-eve të pipeline-it të për
 - `models/gaussian_mixture_model/gmm_feature_columns.pkl`
 - `pictures/phase_2/unsupervised/gaussian_mixture/gmm_model_selection.png`
 - `pictures/phase_2/unsupervised/gaussian_mixture/gmm_cluster_profile_heatmap.png`
+- `pictures/phase_2/unsupervised/gaussian_mixture/gmm_cluster_sizes.png`
 - `pictures/phase_2/unsupervised/gaussian_mixture/gmm_pca_interactive.html`
 - `pictures/phase_2/unsupervised/gaussian_mixture/gmm_pm25_by_cluster.png`
 - `pictures/phase_2/unsupervised/gaussian_mixture/gmm_pm25_timeline.png`
@@ -3071,6 +3483,8 @@ Pas fazës së dytë të projektit, përveç output-eve të pipeline-it të për
 - `pictures/phase_2/unsupervised/isolation_forest/isolation_forest_pm25_zoom.png`
 - `pictures/phase_2/unsupervised/isolation_forest/isolation_forest_scatter.png`
 - `pictures/phase_2/unsupervised/isolation_forest/isolation_forest_score_distribution.png`
+- `pictures/phase_2/unsupervised/isolation_forest/isolation_forest_feature_shift.png`
+- `pictures/phase_2/unsupervised/isolation_forest/isolation_forest_pm25_profile.png`
 - `pictures/phase_2/unsupervised/isolation_forest/isolation_forest_feature_shift_panel.png`
 - `pictures/phase_2/unsupervised/isolation_forest/isolation_forest_metrics_table.png`
 
@@ -3090,85 +3504,239 @@ Pas fazës së dytë të projektit, përveç output-eve të pipeline-it të për
 
 ---
 
-### Vizualizimet interaktive
+### Vizualizimet e fazës së dytë
 
-Në këtë fazë janë ndërtuar jo vetëm vizualizime interaktive, por edhe figura statike të standardizuara për krahasim akademik mes modeleve.
+Në këtë seksion paraqiten të gjitha figurat statike të fazës së dytë, të organizuara sipas modelit përkatës. Vizualizimet interaktive `.html` listohen si file të veçanta, ndërsa figurat `.png` shfaqen direkt për dokumentim dhe prezantim.
 
-#### Vizualizimi i CatBoost
+#### CatBoost
 
-Grafiku interaktiv `Observed vs Predicted` është konceptuar për të paraqitur:
-
-- serinë reale të `PM2.5`,
-- parashikimet në test set,
-- residuals,
-- dhe kufijtë kohorë ndërmjet `train`, `validation` dhe `test`.
-
-Ky vizualizim ruhet në:
+Vizualizimi interaktiv ruhet në:
 
 - `pictures/phase_2/supervised/catboost/catboost_forecast_interactive.html`
 
-#### Vizualizimi i HDBSCAN
+![CatBoost Interactive Forecast](pictures/phase_2/supervised/catboost/catboost_forecast_interactive.png)
 
-Vizualizimi 2D me `UMAP` është konceptuar për të paraqitur:
+Kjo figurë paraqet pamjen statike të forecast-it interaktiv të `CatBoost`.
 
-- shpërndarjen e vëzhgimeve në hapësirë të reduktuar,
-- cluster-at e gjetur nga HDBSCAN,
-- noise points,
-- dhe karakteristikat kryesore në hover.
+![CatBoost Actual vs Predicted](pictures/phase_2/supervised/catboost/catboost_actual_vs_predicted.png)
 
-Ky vizualizim ruhet në:
+Kjo figurë krahason serinë reale me parashikimin e modelit në test set.
+
+![CatBoost Residual Diagnostics](pictures/phase_2/supervised/catboost/catboost_residual_diagnostics.png)
+
+Kjo figurë shfaq diagnostikën kryesore të residualeve të `CatBoost`.
+
+![CatBoost Feature Importance](pictures/phase_2/supervised/catboost/catboost_feature_importance.png)
+
+Kjo figurë paraqet rëndësinë relative të feature-ave në modelin final.
+
+![CatBoost Metrics Table](pictures/phase_2/supervised/catboost/catboost_metrics_table.png)
+
+Kjo figurë përmbledh metrikat kryesore të `CatBoost` në një tabelë të vetme.
+
+#### LightGBM
+
+![LightGBM Actual vs Predicted](pictures/phase_2/supervised/lightgbm_improved/lightgbm_actual_vs_predicted.png)
+
+Kjo figurë paraqet përputhjen mes vlerave reale dhe parashikimit të `LightGBM`.
+
+![LightGBM Feature Importance](pictures/phase_2/supervised/lightgbm_improved/lightgbm_feature_importance.png)
+
+Kjo figurë tregon peshën e feature-ave në modelin final `LightGBM`.
+
+![LightGBM Learning Curve](pictures/phase_2/supervised/lightgbm_improved/lightgbm_learning_curve.png)
+
+Kjo figurë paraqet ecurinë e mësimit gjatë trajnimit të modelit.
+
+![LightGBM Metrics Table](pictures/phase_2/supervised/lightgbm_improved/lightgbm_metrics_table.png)
+
+Kjo figurë përmbledh metrikat kryesore të `LightGBM` për krahasim me modelet e tjera supervised.
+
+#### SARIMAX
+
+Vizualizimi interaktiv ruhet në:
+
+- `pictures/phase_2/supervised/sarimax/sarimax_forecast_interactive.html`
+
+![SARIMAX Actual vs Predicted](pictures/phase_2/supervised/sarimax/sarimax_actual_vs_predicted.png)
+
+Kjo figurë tregon forecast-in e `SARIMAX` kundrejt vlerave reale të `PM2.5`.
+
+![SARIMAX Residual Diagnostics](pictures/phase_2/supervised/sarimax/sarimax_residual_diagnostics.png)
+
+Kjo figurë paraqet diagnostikën e residualeve të modelit statistik.
+
+![SARIMAX Coefficients](pictures/phase_2/supervised/sarimax/sarimax_coefficients.png)
+
+Kjo figurë përmbledh koeficientët më domethënës të modelit final.
+
+![SARIMAX Metrics Table](pictures/phase_2/supervised/sarimax/sarimax_metrics_table.png)
+
+Kjo figurë i vendos në një kornizë të vetme metrikat kryesore të `SARIMAX`.
+
+#### HDBSCAN
+
+Vizualizimi interaktiv ruhet në:
 
 - `pictures/phase_2/unsupervised/hdbscan/hdbscan_umap_interactive.html`
 
-#### Vizualizimi i SARIMAX
+![HDBSCAN Metrics Table](pictures/phase_2/unsupervised/hdbscan/hdbscan_metrics_table.png)
 
-Vizualizimi i `SARIMAX` është ndërtuar për të paraqitur:
+Kjo figurë përmbledh metrikat kryesore të clustering-ut për `HDBSCAN`.
 
-- serinë reale të `PM2.5`,
-- parashikimin në `test set`,
-- intervalet e besimit,
-- si dhe diagnostikën e residualeve në formë statike.
+![HDBSCAN UMAP](pictures/phase_2/unsupervised/hdbscan/hdbscan_umap_interactive.png)
 
-Artefaktet kryesore të vizualizimit janë:
+Kjo figurë paraqet cluster-at dhe pikat `noise` në embedding-un 2D.
 
-- `pictures/phase_2/supervised/sarimax/sarimax_forecast_interactive.html`
-- `pictures/phase_2/supervised/sarimax/sarimax_actual_vs_predicted.png`
-- `pictures/phase_2/supervised/sarimax/sarimax_residual_diagnostics.png`
-- `pictures/phase_2/supervised/sarimax/sarimax_coefficients.png`
+![HDBSCAN PM25 by Cluster](pictures/phase_2/unsupervised/hdbscan/hdbscan_pm25_by_cluster.png)
 
-#### Vizualizimi i Gaussian Mixture
+Kjo figurë krahason profilin e `PM2.5` ndërmjet cluster-ëve bazë.
 
-Vizualizimi i `Gaussian Mixture` është ndërtuar për të paraqitur:
+![HDBSCAN Cluster Sizes](pictures/phase_2/unsupervised/hdbscan/hdbscan_cluster_sizes.png)
 
-- cluster-at probabilistikë në hapësirën e reduktuar me `PCA`,
-- krahasimin e kandidatëve gjatë model selection,
-- dhe profilet mesatare të cluster-ëve përmes heatmap-it.
+Kjo figurë tregon përmasat relative të cluster-ëve të zbuluar.
 
-Artefaktet kryesore të vizualizimit janë:
+![HDBSCAN PM25 Timeline](pictures/phase_2/unsupervised/hdbscan/hdbscan_pm25_timeline.png)
+
+Kjo figurë e vendos etiketimin e cluster-ëve mbi boshtin kohor të serisë.
+
+![HDBSCAN PM25 Zoom](pictures/phase_2/unsupervised/hdbscan/hdbscan_pm25_zoom.png)
+
+Kjo figurë ofron një pamje më të afërt të episodeve më të dallueshme.
+
+![HDBSCAN Scatter](pictures/phase_2/unsupervised/hdbscan/hdbscan_scatter.png)
+
+Kjo figurë paraqet shpërndarjen e observimeve në raport me ndotjen dhe energjinë.
+
+![HDBSCAN Confidence Distribution](pictures/phase_2/unsupervised/hdbscan/hdbscan_confidence_distribution.png)
+
+Kjo figurë tregon shpërndarjen e besimit të anëtarësimit në cluster.
+
+![HDBSCAN Feature Shift Panel](pictures/phase_2/unsupervised/hdbscan/hdbscan_feature_shift_panel.png)
+
+Kjo figurë përmbledh devijimet kryesore të feature-ave sipas cluster-it.
+
+#### Gaussian Mixture
+
+Vizualizimi interaktiv ruhet në:
 
 - `pictures/phase_2/unsupervised/gaussian_mixture/gmm_pca_interactive.html`
-- `pictures/phase_2/unsupervised/gaussian_mixture/gmm_model_selection.png`
-- `pictures/phase_2/unsupervised/gaussian_mixture/gmm_cluster_profile_heatmap.png`
-- `pictures/phase_2/unsupervised/gaussian_mixture/gmm_pm25_by_cluster.png`
-- `pictures/phase_2/unsupervised/gaussian_mixture/gmm_scatter.png`
 
-#### Vizualizimi i Isolation Forest
+![GMM Metrics Table](pictures/phase_2/unsupervised/gaussian_mixture/gmm_metrics_table.png)
 
-Vizualizimet e `Isolation Forest` janë ndërtuar për të paraqitur:
+Kjo figurë përmbledh metrikat kryesore të modelit `Gaussian Mixture`.
 
-- ecurinë kohore të anomalive në `PM2.5`,
-- lidhjen mes prodhimit të energjisë dhe ndotjes,
-- shpërndarjen e score-ve të anomalisë,
-- dhe profilin `Normal vs Anomaly`.
+![GMM Model Selection](pictures/phase_2/unsupervised/gaussian_mixture/gmm_model_selection.png)
 
-Artefaktet kryesore të vizualizimit janë:
+Kjo figurë tregon procesin e përzgjedhjes së modelit final.
 
-- `pictures/phase_2/unsupervised/isolation_forest/isolation_forest_pm25.png`
-- `pictures/phase_2/unsupervised/isolation_forest/isolation_forest_pm25_zoom.png`
-- `pictures/phase_2/unsupervised/isolation_forest/isolation_forest_scatter.png`
-- `pictures/phase_2/unsupervised/isolation_forest/isolation_forest_score_distribution.png`
-- `pictures/phase_2/unsupervised/isolation_forest/isolation_forest_pm25_profile.png`
-- `pictures/phase_2/unsupervised/isolation_forest/isolation_forest_metrics_table.png`
+![GMM Cluster Profile Heatmap](pictures/phase_2/unsupervised/gaussian_mixture/gmm_cluster_profile_heatmap.png)
+
+Kjo figurë paraqet profilet mesatare të cluster-ëve në formë heatmap-i.
+
+![GMM Cluster Sizes](pictures/phase_2/unsupervised/gaussian_mixture/gmm_cluster_sizes.png)
+
+Kjo figurë tregon përmasat relative të gjashtë cluster-ëve finalë.
+
+![GMM PM25 by Cluster](pictures/phase_2/unsupervised/gaussian_mixture/gmm_pm25_by_cluster.png)
+
+Kjo figurë krahason nivelin mesatar të `PM2.5` ndërmjet cluster-ëve.
+
+![GMM PM25 Timeline](pictures/phase_2/unsupervised/gaussian_mixture/gmm_pm25_timeline.png)
+
+Kjo figurë vendos cluster-at mbi boshtin kohor të serisë së `PM2.5`.
+
+![GMM PM25 Zoom](pictures/phase_2/unsupervised/gaussian_mixture/gmm_pm25_zoom.png)
+
+Kjo figurë jep një pamje më të afërt të episodeve më karakteristike.
+
+![GMM Scatter](pictures/phase_2/unsupervised/gaussian_mixture/gmm_scatter.png)
+
+Kjo figurë paraqet shpërndarjen e cluster-ëve kundrejt energjisë dhe ndotjes reale.
+
+![GMM Confidence Distribution](pictures/phase_2/unsupervised/gaussian_mixture/gmm_confidence_distribution.png)
+
+Kjo figurë tregon shpërndarjen e probabilitetit maksimal të anëtarësimit në cluster.
+
+![GMM Feature Shift Panel](pictures/phase_2/unsupervised/gaussian_mixture/gmm_feature_shift_panel.png)
+
+Kjo figurë përmbledh feature-at që i dallojnë më fort cluster-at nga mesatarja globale.
+
+#### Isolation Forest
+
+![Isolation Forest Metrics Table](pictures/phase_2/unsupervised/isolation_forest/isolation_forest_metrics_table.png)
+
+Kjo figurë përmbledh parametrat dhe metrikat kryesore të `Isolation Forest`.
+
+![Isolation Forest PM25 Trend](pictures/phase_2/unsupervised/isolation_forest/isolation_forest_pm25.png)
+
+Kjo figurë tregon anomalitë e vendosura mbi serinë kohore të `PM2.5`.
+
+![Isolation Forest Energy Trend](pictures/phase_2/unsupervised/isolation_forest/isolation_forest_energy.png)
+
+Kjo figurë lidh anomalitë me serinë kohore të prodhimit të energjisë.
+
+![Isolation Forest PM25 Zoom](pictures/phase_2/unsupervised/isolation_forest/isolation_forest_pm25_zoom.png)
+
+Kjo figurë ofron pamjen e zmadhuar të episodeve më të ndjeshme.
+
+![Isolation Forest Scatter](pictures/phase_2/unsupervised/isolation_forest/isolation_forest_scatter.png)
+
+Kjo figurë paraqet pozicionin e anomalive në raport me ndotjen dhe energjinë.
+
+![Isolation Forest Score Distribution](pictures/phase_2/unsupervised/isolation_forest/isolation_forest_score_distribution.png)
+
+Kjo figurë tregon shpërndarjen e score-ve të anomalive.
+
+![Isolation Forest PM25 Profile](pictures/phase_2/unsupervised/isolation_forest/isolation_forest_pm25_profile.png)
+
+Kjo figurë krahason profilin `Normal` kundrejt `Anomaly`.
+
+![Isolation Forest Feature Shift](pictures/phase_2/unsupervised/isolation_forest/isolation_forest_feature_shift.png)
+
+Kjo figurë paraqet feature-at me devijimin më të madh absolut te grupi anormal.
+
+![Isolation Forest Feature Shift Panel](pictures/phase_2/unsupervised/isolation_forest/isolation_forest_feature_shift_panel.png)
+
+Kjo figurë zgjeron interpretimin e devijimeve kryesore të feature-ave.
+
+#### Krahasimi i harmonizuar
+
+![Supervised Comparison Table](pictures/phase_2/comparison/supervised_comparison_table.png)
+
+Kjo figurë përmbledh krahasimin standard të tre modeleve supervised.
+
+![Supervised Error Metrics](pictures/phase_2/comparison/supervised_error_metrics.png)
+
+Kjo figurë krahason `MAE` dhe `RMSE` ndërmjet modeleve supervised.
+
+![Supervised R2 Comparison](pictures/phase_2/comparison/supervised_r2_comparison.png)
+
+Kjo figurë krahason `R²` ndërmjet `LightGBM`, `CatBoost` dhe `SARIMAX`.
+
+![Supervised Feature Panels](pictures/phase_2/comparison/supervised_feature_panels.png)
+
+Kjo figurë bashkon në një panel logjikën interpretuese të modeleve supervised.
+
+![Unsupervised Comparison Table](pictures/phase_2/comparison/unsupervised_comparison_table.png)
+
+Kjo figurë përmbledh krahasimin e harmonizuar të modeleve unsupervised.
+
+![Unsupervised Special Ratio And Groups](pictures/phase_2/comparison/unsupervised_special_ratio_and_groups.png)
+
+Kjo figurë krahason numrin e grupeve dhe raportin e pikave speciale për secilin model.
+
+![Unsupervised Clustering Quality](pictures/phase_2/comparison/unsupervised_clustering_quality.png)
+
+Kjo figurë krahason cilësinë e clustering-ut për `HDBSCAN` dhe `Gaussian Mixture`.
+
+![Unsupervised Feature Panels](pictures/phase_2/comparison/unsupervised_feature_panels.png)
+
+Kjo figurë përmbledh profilet krahasuese të feature-ave te modelet unsupervised.
+
+![Unsupervised PM25 Profiles](pictures/phase_2/comparison/unsupervised_pm25_profiles.png)
+
+Kjo figurë krahason profilin e `PM2.5` ndërmjet cluster-ëve dhe anomalive.
 
 ---
 
