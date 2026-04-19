@@ -1867,6 +1867,14 @@ Grafiku tregon se modeli i përmirësuar dinamik arrin të ndjekë me saktësi p
 
 ![Actual vs Predicted](pictures/phase_2/supervised/lightgbm_improved/lightgbm_actual_vs_predicted.png)
 
+Në përditësimin më të fundit të këtij modeli janë raportuar edhe metrikat relative të gabimit:
+
+- `MAE = 2.0827`
+- `RMSE = 3.2537`
+- `R² = 0.7454`
+- `MAPE = 20.78%`
+- `SMAPE = 19.90%`
+
 #### Konkluzioni
 
 Ky eksperiment vërteton se ndikimi i termocentraleve dhe motit në Prishtinë është shumë domethënës, por efekti i tyre i vërtetë mund të matet dhe parashikohet saktë vetëm kur modeli merr parasysh natyrën akumuluese të smogut në atmosferë.
@@ -1874,7 +1882,7 @@ Ky eksperiment vërteton se ndikimi i termocentraleve dhe motit në Prishtinë �
 #### Artifaktet e gjeneruara
 
 - `baseline_model.joblib` / `improved_model.joblib`: Modelet e ruajtura.
-- `metrics_summary.txt`: Përmbledhja e metrikave (MAE, RMSE, R²).
+- `metrics_summary.txt`: Përmbledhja e metrikave (`MAE`, `RMSE`, `R²`, `MAPE`, `SMAPE`).
 - `feature_importance.csv` dhe `feature_importance.png`: Pesha e saktë e ndikimit për çdo variabël.
 - `actual_vs_predicted.png`: Grafiku kohor i përputhshmërisë mes parashikimit të modelit dhe ndotjes reale.
 - `learning_curve.png`: Kurba e rënies së gabimit gjatë procesit të trajnimit të modelit.

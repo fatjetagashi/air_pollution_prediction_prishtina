@@ -134,9 +134,11 @@ def parse_lightgbm_metrics(text_path: Path) -> dict[str, float]:
         return float(match.group(1))
 
     return {
-        "R2": extract(r"R\S*:\s*([0-9.]+)"),
-        "RMSE": extract(r"RMSE:\s*([0-9.]+)"),
-        "MAE": extract(r"MAE:\s*([0-9.]+)"),
+        "R2": extract(r"(?m)^\s*R\S*:\s*([0-9.]+)"),
+        "RMSE": extract(r"(?m)^\s*RMSE:\s*([0-9.]+)"),
+        "MAE": extract(r"(?m)^\s*MAE:\s*([0-9.]+)"),
+        "MAPE_pct": extract(r"(?m)^\s*MAPE:\s*([0-9.]+)"),
+        "SMAPE_pct": extract(r"(?m)^\s*SMAPE:\s*([0-9.]+)"),
     }
 
 
@@ -519,8 +521,8 @@ def process_lightgbm_improved() -> tuple[dict[str, object], pd.DataFrame]:
         "n_features": int(len(feature_std)),
         "MAE": metrics["MAE"],
         "RMSE": metrics["RMSE"],
-        "MAPE_pct": np.nan,
-        "SMAPE_pct": np.nan,
+        "MAPE_pct": metrics["MAPE_pct"],
+        "SMAPE_pct": metrics["SMAPE_pct"],
         "R2": metrics["R2"],
         "source_metrics": str(source_dir / "metrics_summary.txt"),
     }
@@ -552,8 +554,8 @@ def process_lightgbm_improved() -> tuple[dict[str, object], pd.DataFrame]:
                 "MAE": metrics_row["MAE"],
                 "RMSE": metrics_row["RMSE"],
                 "R2": metrics_row["R2"],
-                "MAPE (%)": np.nan,
-                "SMAPE (%)": np.nan,
+                "MAPE (%)": metrics_row["MAPE_pct"],
+                "SMAPE (%)": metrics_row["SMAPE_pct"],
             }
         ]
     )
