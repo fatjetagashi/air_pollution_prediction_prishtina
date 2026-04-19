@@ -57,8 +57,7 @@
    - [Isolation Forest për analizë unsupervised](#isolation-forest-për-analizë-unsupervised)
    - [Ekzekutimi i fazës së dytë](#ekzekutimi-i-fazës-së-dytë)
    - [Krahasimi i harmonizuar i modeleve](#krahasimi-i-harmonizuar-i-modeleve)
-   - [Rezultatet kryesore të fazës së dytë](#rezultatet-kryesore-të-fazës-së-dytë)
-   - [Metrikat dhe interpretimi i rezultateve](#metrikat-dhe-interpretimi-i-rezultateve)
+   - [Rezultatet, metrikat dhe interpretimi i fazës së dytë](#rezultatet-metrikat-dhe-interpretimi-i-fazës-së-dytë)
    - [Artefaktet e krijuara nga modelet](#artefaktet-e-krijuara-nga-modelet)
   - [Vizualizimet e fazës së dytë](#vizualizimet-e-fazës-së-dytë)
    - [Rezultati i zgjeruar i pipeline-it](#rezultati-i-zgjeruar-i-pipeline-it)
@@ -1907,23 +1906,17 @@ Grafiku kryesor i parashikimit:
 
 Kjo figurë tregon se `CatBoost` ndjek relativisht mirë dinamikën e serisë reale dhe kap pjesën më të madhe të luhatjeve kryesore në test set.
 
-Diagnostika e residualeve:
-
-![CatBoost Residual Diagnostics](pictures/phase_2/supervised/catboost/catboost_residual_diagnostics.png)
-
-Kjo figurë ndihmon të shihet shpërndarja e gabimeve dhe nëse residualet mbeten të përqendruara rreth zeros apo shfaqin devijime sistematike.
-
 Rëndësia e feature-ave:
 
 ![CatBoost Feature Importance](pictures/phase_2/supervised/catboost/catboost_feature_importance.png)
 
 Kjo figurë tregon cilët faktorë kohorë, meteorologjikë dhe energjetikë kanë kontribuar më shumë në parashikimin e `PM2.5`.
 
-Tabela përmbledhëse e metrikave:
+Diagnostika e residualeve:
 
-![CatBoost Metrics Table](pictures/phase_2/supervised/catboost/catboost_metrics_table.png)
+![CatBoost Residual Diagnostics](pictures/phase_2/supervised/catboost/catboost_residual_diagnostics.png)
 
-Kjo figurë përmbledh në një vend metrikat kryesore të modelit dhe e bën më të lehtë krahasimin me `LightGBM` dhe `SARIMAX`.
+Kjo figurë ndihmon të shihet shpërndarja e gabimeve dhe nëse residualet mbeten të përqendruara rreth zeros apo shfaqin devijime sistematike.
 
 Pamja statike e forecast-it interaktiv:
 
@@ -1937,6 +1930,12 @@ Përveç figurave statike, është ruajtur edhe vizualizimi interaktiv:
 - `pictures/phase_2/supervised/catboost/catboost_forecast_interactive.png`
 
 Ky vizualizim lejon inspektim më të detajuar të sjelljes së parashikimit në boshtin kohor dhe është veçanërisht i vlefshëm në prezantim.
+
+Tabela përmbledhëse e metrikave:
+
+![CatBoost Metrics Table](pictures/phase_2/supervised/catboost/catboost_metrics_table.png)
+
+Kjo figurë përmbledh në një vend metrikat kryesore të modelit dhe e bën më të lehtë krahasimin me `LightGBM` dhe `SARIMAX`.
 
 ---
 
@@ -2067,17 +2066,17 @@ Kjo tregon qartë se `LightGBM` e konsideron komponentin kohor si dominues, por 
 
 #### Vizualizimet
 
-Rëndësia e feature-ave:
-
-![LightGBM Feature Importance](pictures/phase_2/supervised/lightgbm_improved/lightgbm_feature_importance.png)
-
-Kjo figurë tregon peshën relative të feature-ave në modelin final dhe e bën shumë të qartë dominimin e lag features.
-
 Krahasimi mes vlerave reale dhe parashikimit:
 
 ![LightGBM Actual vs Predicted](pictures/phase_2/supervised/lightgbm_improved/lightgbm_actual_vs_predicted.png)
 
 Kjo figurë paraqet sa mirë modeli ndjek dinamikën reale të `PM2.5` në fold-in e fundit të validimit kohor.
+
+Rëndësia e feature-ave:
+
+![LightGBM Feature Importance](pictures/phase_2/supervised/lightgbm_improved/lightgbm_feature_importance.png)
+
+Kjo figurë tregon peshën relative të feature-ave në modelin final dhe e bën shumë të qartë dominimin e lag features.
 
 Kurba e të mësuarit:
 
@@ -2346,27 +2345,27 @@ Grafiku kryesor i parashikimit:
 
 Kjo figurë tregon përputhjen mes vlerave reale të `PM2.5` dhe forecast-it të modelit në test set.
 
-Diagnostika e residualeve:
-
-![SARIMAX Residual Diagnostics](pictures/phase_2/supervised/sarimax/sarimax_residual_diagnostics.png)
-
-Kjo figurë ndihmon të vlerësohet nëse residualet janë të balancuara dhe nëse mbeten struktura sistematike të pa kapura nga modeli.
-
 Paneli shtesë i koeficientëve më të fortë:
 
 ![SARIMAX Coefficients](pictures/phase_2/supervised/sarimax/sarimax_coefficients.png)
 
 Kjo figurë përmbledh parametrat më domethënës të modelit dhe e bën më të lehtë interpretimin statistik të komponentëve autoregresivë, sezonalë dhe exogenous.
 
+Diagnostika e residualeve:
+
+![SARIMAX Residual Diagnostics](pictures/phase_2/supervised/sarimax/sarimax_residual_diagnostics.png)
+
+Kjo figurë ndihmon të vlerësohet nëse residualet janë të balancuara dhe nëse mbeten struktura sistematike të pa kapura nga modeli.
+
+Përveç figurave statike, është ruajtur edhe vizualizimi interaktiv:
+
+- `pictures/phase_2/supervised/sarimax/sarimax_forecast_interactive.html`
+
 Tabela përmbledhëse e metrikave:
 
 ![SARIMAX Metrics Table](pictures/phase_2/supervised/sarimax/sarimax_metrics_table.png)
 
 Kjo figurë i vendos në një vend metrikat kryesore të `SARIMAX` dhe ndihmon krahasimin e tij me modelet e tjera supervised.
-
-Përveç figurave statike, është ruajtur edhe vizualizimi interaktiv:
-
-- `pictures/phase_2/supervised/sarimax/sarimax_forecast_interactive.html`
 
 #### Artefaktet e gjeneruara nga SARIMAX
 
@@ -2587,29 +2586,23 @@ Interpretimi akademik i këtyre rezultateve është se `HDBSCAN` po sillet si nj
 
 #### Vizualizimet
 
-Tabela përmbledhëse e metrikave:
-
-![HDBSCAN Metrics Table](pictures/phase_2/unsupervised/hdbscan/hdbscan_metrics_table.png)
-
-Kjo figurë përmbledh metrikat kryesore të modelit dhe e bën më të qartë profilin konservativ të `HDBSCAN`.
-
 Pamja 2D e cluster-ëve në hapësirën e reduktuar:
 
 ![HDBSCAN UMAP](pictures/phase_2/unsupervised/hdbscan/hdbscan_umap_interactive.png)
 
 Kjo figurë paraqet cluster-at dhe pikat `noise` në embedding-un `UMAP`, pra pamjen vizuale më të drejtpërdrejtë të ndarjes së bërë nga modeli.
 
-Profili i `PM2.5` sipas cluster-it:
-
-![HDBSCAN PM25 by Cluster](pictures/phase_2/unsupervised/hdbscan/hdbscan_pm25_by_cluster.png)
-
-Kjo figurë tregon si ndryshon niveli mesatar i `PM2.5` ndërmjet cluster-ëve bazë të zbuluar nga `HDBSCAN`.
-
 Përmasat relative të cluster-ëve:
 
 ![HDBSCAN Cluster Sizes](pictures/phase_2/unsupervised/hdbscan/hdbscan_cluster_sizes.png)
 
 Kjo figurë tregon sa të mëdha janë grupet kryesore të zbuluara dhe sa e përqendruar apo e rrallë mbetet struktura e të dhënave.
+
+Profili i `PM2.5` sipas cluster-it:
+
+![HDBSCAN PM25 by Cluster](pictures/phase_2/unsupervised/hdbscan/hdbscan_pm25_by_cluster.png)
+
+Kjo figurë tregon si ndryshon niveli mesatar i `PM2.5` ndërmjet cluster-ëve bazë të zbuluar nga `HDBSCAN`.
 
 Ecuria kohore e `PM2.5` me ngjyrat e cluster-ëve:
 
@@ -2640,6 +2633,12 @@ Paneli i ndryshimit të feature-ave:
 ![HDBSCAN Feature Shift Panel](pictures/phase_2/unsupervised/hdbscan/hdbscan_feature_shift_panel.png)
 
 Kjo figurë përmbledh cilat tipare dallojnë më shumë ndërmjet cluster-ëve dhe mesatares globale të dataset-it.
+
+Tabela përmbledhëse e metrikave:
+
+![HDBSCAN Metrics Table](pictures/phase_2/unsupervised/hdbscan/hdbscan_metrics_table.png)
+
+Kjo figurë përmbledh metrikat kryesore të modelit dhe e bën më të qartë profilin konservativ të `HDBSCAN`.
 
 #### Artefaktet e gjeneruara nga HDBSCAN
 
@@ -2678,6 +2677,7 @@ Vizualizimi interaktiv i cluster-ëve gjenerohet në:
 
 Për krahasim të harmonizuar janë gjeneruar edhe:
 
+- `pictures/phase_2/unsupervised/hdbscan/hdbscan_cluster_sizes.png`
 - `pictures/phase_2/unsupervised/hdbscan/hdbscan_pm25_by_cluster.png`
 - `pictures/phase_2/unsupervised/hdbscan/hdbscan_pm25_timeline.png`
 - `pictures/phase_2/unsupervised/hdbscan/hdbscan_pm25_zoom.png`
@@ -2914,12 +2914,6 @@ Krahasimi i kandidatëve gjatë model selection:
 
 Kjo figurë tregon si janë krahasuar konfigurimet e ndryshme sipas `BIC`, `AIC` dhe metrikave të tjera për të zgjedhur modelin final.
 
-Tabela përmbledhëse e metrikave:
-
-![GMM Metrics Table](pictures/phase_2/unsupervised/gaussian_mixture/gmm_metrics_table.png)
-
-Kjo figurë përmbledh rezultatet kryesore të modelit final në një format të përshtatshëm për krahasim me `HDBSCAN`.
-
 Heatmap-i i profileve të cluster-ëve:
 
 ![GMM Cluster Profile Heatmap](pictures/phase_2/unsupervised/gaussian_mixture/gmm_cluster_profile_heatmap.png)
@@ -2971,6 +2965,12 @@ Kjo figurë përmbledh feature-at që e dallojnë më fort secilin cluster nga m
 Vizualizimi interaktiv në hapësirën e reduktuar me `PCA` ruhet në:
 
 - `pictures/phase_2/unsupervised/gaussian_mixture/gmm_pca_interactive.html`
+
+Tabela përmbledhëse e metrikave:
+
+![GMM Metrics Table](pictures/phase_2/unsupervised/gaussian_mixture/gmm_metrics_table.png)
+
+Kjo figurë përmbledh rezultatet kryesore të modelit final në një format të përshtatshëm për krahasim me `HDBSCAN`.
 
 #### Artefaktet e gjeneruara nga Gaussian Mixture
 
@@ -3117,12 +3117,6 @@ Nga `isolation_forest_top_anomalies.csv` del qartë edhe një tipar interesant: 
 
 #### Vizualizimet
 
-Tabela përmbledhëse e metrikave:
-
-![Isolation Forest Metrics Table](pictures/phase_2/unsupervised/isolation_forest/isolation_forest_metrics_table.png)
-
-Kjo figurë përmbledh në një vend të vetëm parametrat dhe metrikat kryesore të modelit.
-
 Ecuria kohore e anomalive në `PM2.5`:
 
 ![Isolation Forest PM25 Trend](pictures/phase_2/unsupervised/isolation_forest/isolation_forest_pm25.png)
@@ -3170,6 +3164,12 @@ Paneli i plotë i devijimeve të feature-ave:
 ![Isolation Forest Feature Shift Panel](pictures/phase_2/unsupervised/isolation_forest/isolation_forest_feature_shift_panel.png)
 
 Kjo figurë e zgjeron interpretimin duke treguar profilin krahasues të feature-ave kryesore.
+
+Tabela përmbledhëse e metrikave:
+
+![Isolation Forest Metrics Table](pictures/phase_2/unsupervised/isolation_forest/isolation_forest_metrics_table.png)
+
+Kjo figurë përmbledh në një vend të vetëm parametrat dhe metrikat kryesore të modelit.
 
 #### Artefaktet e gjeneruara nga Isolation Forest
 
@@ -3298,7 +3298,7 @@ Kjo figurë ndihmon në krahasimin e profileve të feature-ave që karakterizojn
 
 ---
 
-### Rezultatet kryesore të fazës së dytë
+### Rezultatet, metrikat dhe interpretimi i fazës së dytë
 
 #### Rezultatet supervised
 
@@ -3330,9 +3330,9 @@ Interpretimi akademik i rezultateve unsupervised është:
 
 ---
 
-### Metrikat dhe interpretimi i rezultateve
+#### Korniza e interpretimit
 
-Në këtë fazë janë përdorur dy nivele interpretimi:
+Në këtë kapitull rezultatet numerike dhe interpretimi i tyre lexohen në dy nivele:
 
 #### 1. Interpretimi supervised
 
@@ -3384,11 +3384,11 @@ Pas fazës së dytë të projektit, përveç output-eve të pipeline-it të për
 - `data/phase_2/supervised/catboost/catboost_split_summary.csv`
 - `data/phase_2/supervised/catboost/catboost_run_info.json`
 - `models/catboost_model/catboost_pm25_model.cbm`
+- `pictures/phase_2/supervised/catboost/catboost_actual_vs_predicted.png`
+- `pictures/phase_2/supervised/catboost/catboost_feature_importance.png`
+- `pictures/phase_2/supervised/catboost/catboost_residual_diagnostics.png`
 - `pictures/phase_2/supervised/catboost/catboost_forecast_interactive.html`
 - `pictures/phase_2/supervised/catboost/catboost_forecast_interactive.png`
-- `pictures/phase_2/supervised/catboost/catboost_actual_vs_predicted.png`
-- `pictures/phase_2/supervised/catboost/catboost_residual_diagnostics.png`
-- `pictures/phase_2/supervised/catboost/catboost_feature_importance.png`
 - `pictures/phase_2/supervised/catboost/catboost_metrics_table.png`
 
 #### LightGBM
@@ -3406,27 +3406,6 @@ Pas fazës së dytë të projektit, përveç output-eve të pipeline-it të për
 - `pictures/phase_2/supervised/lightgbm_improved/lightgbm_learning_curve.png`
 - `pictures/phase_2/supervised/lightgbm_improved/lightgbm_metrics_table.png`
 
-#### HDBSCAN
-
-- `data/phase_2/unsupervised/hdbscan/hdbscan_clustered_dataset.csv`
-- `data/phase_2/unsupervised/hdbscan/hdbscan_metrics.csv`
-- `data/phase_2/unsupervised/hdbscan/hdbscan_cluster_summary.csv`
-- `data/phase_2/unsupervised/hdbscan/hdbscan_feature_summary.csv`
-- `data/phase_2/unsupervised/hdbscan/hdbscan_run_info.json`
-- `models/hdbscan_model/hdbscan_model.pkl`
-- `models/hdbscan_model/hdbscan_scaler.pkl`
-- `models/hdbscan_model/hdbscan_umap.pkl`
-- `pictures/phase_2/unsupervised/hdbscan/hdbscan_umap_interactive.html`
-- `pictures/phase_2/unsupervised/hdbscan/hdbscan_umap_interactive.png`
-- `pictures/phase_2/unsupervised/hdbscan/hdbscan_pm25_by_cluster.png`
-- `pictures/phase_2/unsupervised/hdbscan/hdbscan_cluster_sizes.png`
-- `pictures/phase_2/unsupervised/hdbscan/hdbscan_pm25_timeline.png`
-- `pictures/phase_2/unsupervised/hdbscan/hdbscan_pm25_zoom.png`
-- `pictures/phase_2/unsupervised/hdbscan/hdbscan_scatter.png`
-- `pictures/phase_2/unsupervised/hdbscan/hdbscan_confidence_distribution.png`
-- `pictures/phase_2/unsupervised/hdbscan/hdbscan_feature_shift_panel.png`
-- `pictures/phase_2/unsupervised/hdbscan/hdbscan_metrics_table.png`
-
 #### SARIMAX
 
 - `data/phase_2/supervised/sarimax/sarimax_forecasts.csv`
@@ -3440,10 +3419,31 @@ Pas fazës së dytë të projektit, përveç output-eve të pipeline-it të për
 - `models/sarimax_model/sarimax_summary.txt`
 - `models/sarimax_model/sarimax_feature_columns.pkl`
 - `pictures/phase_2/supervised/sarimax/sarimax_actual_vs_predicted.png`
+- `pictures/phase_2/supervised/sarimax/sarimax_coefficients.png`
 - `pictures/phase_2/supervised/sarimax/sarimax_residual_diagnostics.png`
 - `pictures/phase_2/supervised/sarimax/sarimax_forecast_interactive.html`
-- `pictures/phase_2/supervised/sarimax/sarimax_coefficients.png`
 - `pictures/phase_2/supervised/sarimax/sarimax_metrics_table.png`
+
+#### HDBSCAN
+
+- `data/phase_2/unsupervised/hdbscan/hdbscan_clustered_dataset.csv`
+- `data/phase_2/unsupervised/hdbscan/hdbscan_metrics.csv`
+- `data/phase_2/unsupervised/hdbscan/hdbscan_cluster_summary.csv`
+- `data/phase_2/unsupervised/hdbscan/hdbscan_feature_summary.csv`
+- `data/phase_2/unsupervised/hdbscan/hdbscan_run_info.json`
+- `models/hdbscan_model/hdbscan_model.pkl`
+- `models/hdbscan_model/hdbscan_scaler.pkl`
+- `models/hdbscan_model/hdbscan_umap.pkl`
+- `pictures/phase_2/unsupervised/hdbscan/hdbscan_umap_interactive.html`
+- `pictures/phase_2/unsupervised/hdbscan/hdbscan_umap_interactive.png`
+- `pictures/phase_2/unsupervised/hdbscan/hdbscan_cluster_sizes.png`
+- `pictures/phase_2/unsupervised/hdbscan/hdbscan_pm25_by_cluster.png`
+- `pictures/phase_2/unsupervised/hdbscan/hdbscan_pm25_timeline.png`
+- `pictures/phase_2/unsupervised/hdbscan/hdbscan_pm25_zoom.png`
+- `pictures/phase_2/unsupervised/hdbscan/hdbscan_scatter.png`
+- `pictures/phase_2/unsupervised/hdbscan/hdbscan_confidence_distribution.png`
+- `pictures/phase_2/unsupervised/hdbscan/hdbscan_feature_shift_panel.png`
+- `pictures/phase_2/unsupervised/hdbscan/hdbscan_metrics_table.png`
 
 #### Gaussian Mixture
 
@@ -3510,6 +3510,18 @@ Në këtë seksion paraqiten të gjitha figurat statike të fazës së dytë, t�
 
 #### CatBoost
 
+![CatBoost Actual vs Predicted](pictures/phase_2/supervised/catboost/catboost_actual_vs_predicted.png)
+
+Kjo figurë krahason serinë reale me parashikimin e modelit në test set.
+
+![CatBoost Feature Importance](pictures/phase_2/supervised/catboost/catboost_feature_importance.png)
+
+Kjo figurë paraqet rëndësinë relative të feature-ave në modelin final.
+
+![CatBoost Residual Diagnostics](pictures/phase_2/supervised/catboost/catboost_residual_diagnostics.png)
+
+Kjo figurë shfaq diagnostikën kryesore të residualeve të `CatBoost`.
+
 Vizualizimi interaktiv ruhet në:
 
 - `pictures/phase_2/supervised/catboost/catboost_forecast_interactive.html`
@@ -3517,18 +3529,6 @@ Vizualizimi interaktiv ruhet në:
 ![CatBoost Interactive Forecast](pictures/phase_2/supervised/catboost/catboost_forecast_interactive.png)
 
 Kjo figurë paraqet pamjen statike të forecast-it interaktiv të `CatBoost`.
-
-![CatBoost Actual vs Predicted](pictures/phase_2/supervised/catboost/catboost_actual_vs_predicted.png)
-
-Kjo figurë krahason serinë reale me parashikimin e modelit në test set.
-
-![CatBoost Residual Diagnostics](pictures/phase_2/supervised/catboost/catboost_residual_diagnostics.png)
-
-Kjo figurë shfaq diagnostikën kryesore të residualeve të `CatBoost`.
-
-![CatBoost Feature Importance](pictures/phase_2/supervised/catboost/catboost_feature_importance.png)
-
-Kjo figurë paraqet rëndësinë relative të feature-ave në modelin final.
 
 ![CatBoost Metrics Table](pictures/phase_2/supervised/catboost/catboost_metrics_table.png)
 
@@ -3554,21 +3554,21 @@ Kjo figurë përmbledh metrikat kryesore të `LightGBM` për krahasim me modelet
 
 #### SARIMAX
 
-Vizualizimi interaktiv ruhet në:
-
-- `pictures/phase_2/supervised/sarimax/sarimax_forecast_interactive.html`
-
 ![SARIMAX Actual vs Predicted](pictures/phase_2/supervised/sarimax/sarimax_actual_vs_predicted.png)
 
 Kjo figurë tregon forecast-in e `SARIMAX` kundrejt vlerave reale të `PM2.5`.
+
+![SARIMAX Coefficients](pictures/phase_2/supervised/sarimax/sarimax_coefficients.png)
+
+Kjo figurë përmbledh koeficientët më domethënës të modelit final.
 
 ![SARIMAX Residual Diagnostics](pictures/phase_2/supervised/sarimax/sarimax_residual_diagnostics.png)
 
 Kjo figurë paraqet diagnostikën e residualeve të modelit statistik.
 
-![SARIMAX Coefficients](pictures/phase_2/supervised/sarimax/sarimax_coefficients.png)
+Vizualizimi interaktiv ruhet në:
 
-Kjo figurë përmbledh koeficientët më domethënës të modelit final.
+- `pictures/phase_2/supervised/sarimax/sarimax_forecast_interactive.html`
 
 ![SARIMAX Metrics Table](pictures/phase_2/supervised/sarimax/sarimax_metrics_table.png)
 
@@ -3580,21 +3580,17 @@ Vizualizimi interaktiv ruhet në:
 
 - `pictures/phase_2/unsupervised/hdbscan/hdbscan_umap_interactive.html`
 
-![HDBSCAN Metrics Table](pictures/phase_2/unsupervised/hdbscan/hdbscan_metrics_table.png)
-
-Kjo figurë përmbledh metrikat kryesore të clustering-ut për `HDBSCAN`.
-
 ![HDBSCAN UMAP](pictures/phase_2/unsupervised/hdbscan/hdbscan_umap_interactive.png)
 
 Kjo figurë paraqet cluster-at dhe pikat `noise` në embedding-un 2D.
 
-![HDBSCAN PM25 by Cluster](pictures/phase_2/unsupervised/hdbscan/hdbscan_pm25_by_cluster.png)
-
-Kjo figurë krahason profilin e `PM2.5` ndërmjet cluster-ëve bazë.
-
 ![HDBSCAN Cluster Sizes](pictures/phase_2/unsupervised/hdbscan/hdbscan_cluster_sizes.png)
 
 Kjo figurë tregon përmasat relative të cluster-ëve të zbuluar.
+
+![HDBSCAN PM25 by Cluster](pictures/phase_2/unsupervised/hdbscan/hdbscan_pm25_by_cluster.png)
+
+Kjo figurë krahason profilin e `PM2.5` ndërmjet cluster-ëve bazë.
 
 ![HDBSCAN PM25 Timeline](pictures/phase_2/unsupervised/hdbscan/hdbscan_pm25_timeline.png)
 
@@ -3616,15 +3612,15 @@ Kjo figurë tregon shpërndarjen e besimit të anëtarësimit në cluster.
 
 Kjo figurë përmbledh devijimet kryesore të feature-ave sipas cluster-it.
 
+![HDBSCAN Metrics Table](pictures/phase_2/unsupervised/hdbscan/hdbscan_metrics_table.png)
+
+Kjo figurë përmbledh metrikat kryesore të clustering-ut për `HDBSCAN`.
+
 #### Gaussian Mixture
 
 Vizualizimi interaktiv ruhet në:
 
 - `pictures/phase_2/unsupervised/gaussian_mixture/gmm_pca_interactive.html`
-
-![GMM Metrics Table](pictures/phase_2/unsupervised/gaussian_mixture/gmm_metrics_table.png)
-
-Kjo figurë përmbledh metrikat kryesore të modelit `Gaussian Mixture`.
 
 ![GMM Model Selection](pictures/phase_2/unsupervised/gaussian_mixture/gmm_model_selection.png)
 
@@ -3662,11 +3658,11 @@ Kjo figurë tregon shpërndarjen e probabilitetit maksimal të anëtarësimit n�
 
 Kjo figurë përmbledh feature-at që i dallojnë më fort cluster-at nga mesatarja globale.
 
+![GMM Metrics Table](pictures/phase_2/unsupervised/gaussian_mixture/gmm_metrics_table.png)
+
+Kjo figurë përmbledh metrikat kryesore të modelit `Gaussian Mixture`.
+
 #### Isolation Forest
-
-![Isolation Forest Metrics Table](pictures/phase_2/unsupervised/isolation_forest/isolation_forest_metrics_table.png)
-
-Kjo figurë përmbledh parametrat dhe metrikat kryesore të `Isolation Forest`.
 
 ![Isolation Forest PM25 Trend](pictures/phase_2/unsupervised/isolation_forest/isolation_forest_pm25.png)
 
@@ -3699,6 +3695,10 @@ Kjo figurë paraqet feature-at me devijimin më të madh absolut te grupi anorma
 ![Isolation Forest Feature Shift Panel](pictures/phase_2/unsupervised/isolation_forest/isolation_forest_feature_shift_panel.png)
 
 Kjo figurë zgjeron interpretimin e devijimeve kryesore të feature-ave.
+
+![Isolation Forest Metrics Table](pictures/phase_2/unsupervised/isolation_forest/isolation_forest_metrics_table.png)
+
+Kjo figurë përmbledh parametrat dhe metrikat kryesore të `Isolation Forest`.
 
 #### Krahasimi i harmonizuar
 
