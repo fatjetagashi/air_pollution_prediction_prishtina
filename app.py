@@ -622,17 +622,23 @@ def build_metric_figure(actual: float, base: float, scenario: float) -> go.Figur
     fig = go.Figure()
     fig.add_trace(
         go.Indicator(
-            mode="gauge+number+delta",
+            mode="gauge+number",
             value=scenario,
-            delta={"reference": base},
-            title={"text": "PM2.5 scenario forecast"},
+            number={"valueformat": ".1f"},
+            title={"text": "Scenario PM2.5 forecast"},
+            domain={"x": [0.0, 1.0], "y": [0.0, 1.0]},
             gauge={
                 "axis": {"range": [0, max_val]},
                 "threshold": {"line": {"color": "black", "width": 4}, "value": actual},
             },
         )
     )
-    fig.update_layout(height=320, margin=dict(l=20, r=20, t=60, b=20))
+    fig.update_layout(
+        autosize=False,
+        width=520,
+        height=320,
+        margin=dict(l=20, r=20, t=60, b=20),
+    )
     return fig
 
 
@@ -641,6 +647,28 @@ def safe_float(v, default=0.0) -> float:
         return float(v)
     except Exception:
         return float(default)
+
+
+def build_settings_summary(settings: dict[str, float]) -> list[str]:
+    summary = []
+    if settings["generation_pct"] != 0:
+        summary.append(f"Generation {settings['generation_pct']:+.0f}%")
+    if settings["temperature_delta"] != 0:
+        summary.append(f"Temperature {settings['temperature_delta']:+.1f} C")
+    if settings["rain_pct"] != 0:
+        summary.append(f"Rain {settings['rain_pct']:+.0f}%")
+    if settings["humidity_delta"] != 0:
+        summary.append(f"Humidity {settings['humidity_delta']:+.1f} pts")
+    if settings["wind_speed_pct"] != 0:
+        summary.append(f"Wind speed {settings['wind_speed_pct']:+.0f}%")
+    if settings["wind_direction_shift"] != 0:
+        summary.append(f"Wind direction {settings['wind_direction_shift']:+.0f} deg")
+    return summary
+
+
+def build_settings_signature(settings: dict[str, float]) -> tuple[tuple[str, float], ...]:
+    return tuple(sorted((key, float(value)) for key, value in settings.items()))
+
 
 # ---------------------------------------------------------
 # LOAD FILES
@@ -667,8 +695,8 @@ phase3_hourly_snapshot_path = first_existing(PHASE3_HOURLY_SNAPSHOT_CANDIDATES)
 # ---------------------------------------------------------
 st.title("Prishtina PM2.5 Forecast Studio")
 st.caption(
-    "Ky version është i lidhur me artefaktet e fazës 2 dhe fazës 3: CatBoost i tunuar, "
-    "krahasime, SHAP, stabilitet sezonal dhe snapshot offline për parashikim të ditës."
+    "An interactive dashboard to explore PM2.5 forecasts, weather scenarios, "
+    "and the impact of energy generation on air quality."
 )
 
 # ---------------------------------------------------------
@@ -717,15 +745,15 @@ first_hist_ts = pd.Timestamp(df_model["timestamp"].min())
 # ---------------------------------------------------------
 if not CATBOOST_AVAILABLE:
     st.warning(
-        "Paketa `catboost` nuk është e instaluar. "
-        "App-i do hapet, por tab-et e forecast-it do të jenë vetëm informative derisa ta instalosh."
+        "The `catboost` package is not installed. "
+        "The app will still open, but the forecast tabs will remain informational until you install it."
     )
     st.code("python -m pip install catboost", language="powershell")
 
 elif catboost_model_path is None:
     st.warning(
-        "Paketa `catboost` ekziston, por nuk u gjet file-i i modelit "
-        "`models/catboost_model/catboost_pm25_model.cbm`."
+        "The `catboost` package is available, but the model file "
+        "`models/catboost_model/catboost_pm25_model.cbm` was not found."
     )
 
 # ---------------------------------------------------------
@@ -752,9 +780,22 @@ settings = {
     "wind_direction_shift": wind_direction_shift,
 }
 
+settings_summary = build_settings_summary(settings)
+settings_signature = build_settings_signature(settings)
 # ---------------------------------------------------------
 # TABS
 # ---------------------------------------------------------
+if settings_summary:
+    st.info(
+        "Scenario updated. Sidebar changes apply to `Historical scenario replay` "
+        f"and `Future forecast`: {', '.join(settings_summary)}."
+    )
+else:
+    st.info(
+        "The baseline scenario is active. Change `Scenario setup` in the sidebar to see the effect "
+        "in `Historical scenario replay` and `Future forecast`."
+    )
+
 tab1, tab2, tab3, tab4 = st.tabs(
     ["Overview", "Historical scenario replay", "Future forecast", "Model center"]
 )
@@ -763,6 +804,17 @@ tab1, tab2, tab3, tab4 = st.tabs(
 # TAB 1 - OVERVIEW
 # ---------------------------------------------------------
 with tab1:
+    st.markdown("### Active scenario")
+    if settings_summary:
+        st.caption(
+            f"Preset: `{preset_name}`. Active changes: {', '.join(settings_summary)}."
+        )
+    else:
+        st.caption(
+            f"Preset: `{preset_name}`. No active sidebar changes. "
+            "To see scenario impact, open `Historical scenario replay` or `Future forecast`."
+        )
+
     c1, c2, c3 = st.columns(3)
     c1.metric("History start", first_hist_ts.strftime("%Y-%m-%d %H:%M"))
     c2.metric("History end", last_hist_ts.strftime("%Y-%m-%d %H:%M"))
@@ -787,25 +839,26 @@ with tab1:
         st.plotly_chart(fig_daily, use_container_width=True)
 
     with right:
-        st.markdown("### Status")
+        st.markdown("### What you can do here")
         if MODEL_READY:
-            st.success("CatBoost modeli është gati për forecast.")
+            st.success("The forecasting model is ready to estimate short-term PM2.5 levels.")
         else:
-            st.info("App-i është hapur, por CatBoost forecast nuk është aktiv ende.")
+            st.info("The dashboard is available, but forecasting is not active yet.")
 
         st.write(
             """
-            Ky app:
-            - lexon dataset-in final të fazës së parë,
-            - përdor CatBoost për replay historik dhe forecast të ardhshëm,
-            - dhe shfaq tabelat krahasuese të modeleve të fazës së dytë.
+            This dashboard helps users:
+            - explore how weather and energy conditions relate to PM2.5 pollution,
+            - test scenario changes through historical replay and future forecast views,
+            - and review the main model results from the project in one place.
             """
         )
 
         if supervised_df is not None and not supervised_df.empty and "R2" in supervised_df.columns:
             best_row = supervised_df.sort_values("R2", ascending=False).iloc[0]
             st.success(
-                f"Best supervised model nga CSV: {best_row['model']} | R² = {safe_float(best_row['R2']):.4f}"
+                f"Best-performing supervised model in the saved results: {best_row['model']} "
+                f"(R2 = {safe_float(best_row['R2']):.4f})"
             )
 
     st.markdown("### Latest observed PM2.5 values")
@@ -818,14 +871,17 @@ with tab1:
 # ---------------------------------------------------------
 with tab2:
     st.markdown("### Historical counterfactual")
+    st.caption(
+        "Using the current sidebar scenario. Any change in `Scenario setup` affects this page."
+    )
 
     if not MODEL_READY:
         st.warning(
             "Ky seksion kërkon CatBoost model aktiv. "
-            "Instalo `catboost` dhe sigurohu që ekziston file-i i modelit."
+            "Install `catboost` and make sure the model file exists."
         )
     else:
-        cols = st.columns([1, 1, 1])
+        cols = st.columns([1, 1])
         hist_date = cols[0].date_input(
             "Date",
             value=last_hist_ts.date(),
@@ -834,11 +890,16 @@ with tab2:
             key="hist_date",
         )
         hist_hour = cols[1].slider("Hour", 0, 23, int(last_hist_ts.hour), key="hist_hour")
-        run_hist = cols[2].button("Run historical scenario", use_container_width=True)
 
         selected_ts = pd.Timestamp(hist_date) + pd.Timedelta(hours=int(hist_hour))
 
-        if run_hist or "hist_result" not in st.session_state:
+        hist_signature = (selected_ts.isoformat(), settings_signature)
+        previous_hist_signature = st.session_state.get("hist_result_signature")
+
+        if (
+            "hist_result" not in st.session_state
+            or previous_hist_signature != hist_signature
+        ):
             st.session_state["hist_result"] = run_historical_counterfactual(
                 ts=selected_ts,
                 df_model_space=df_model,
@@ -848,6 +909,7 @@ with tab2:
                 scaler=scaler,
                 settings=settings,
             )
+            st.session_state["hist_result_signature"] = hist_signature
 
         hist_result = st.session_state["hist_result"]
 
@@ -869,7 +931,7 @@ with tab2:
                     base=hist_result["pred_base_real"],
                     scenario=hist_result["pred_scenario_real"],
                 ),
-                use_container_width=True,
+                use_container_width=False,
             )
 
         with right:
@@ -901,13 +963,15 @@ with tab2:
 # ---------------------------------------------------------
 with tab3:
     st.markdown("### Recursive future forecast")
+    st.caption(
+        "Using the current sidebar scenario. Any change in `Scenario setup` affects this page."
+    )
 
     if phase3_daily_snapshot_df is not None and not phase3_daily_snapshot_df.empty:
         st.markdown("#### Stored next-day snapshot")
         snapshot = phase3_daily_snapshot_df.iloc[0]
         st.info(
-            "Ky seksion lexon rezultatet e ruajtura nga faza 3. "
-            "Nuk ka nevojë për shkarkim live nga KOSTT gjatë demos."
+            "This next-day forecast snapshot is based on the KOSTT day-ahead generation plan."
         )
         c1, c2, c3, c4 = st.columns(4)
         c1.metric("Forecast date", str(snapshot.get("forecast_date", "")))
@@ -932,7 +996,7 @@ with tab3:
     if not MODEL_READY:
         st.warning(
             "Ky seksion kërkon CatBoost model aktiv. "
-            "Pasi ta instalosh `catboost`, forecast-i do punojë pa ndryshim tjetër në kod."
+            "Once you install `catboost`, forecasting will work without any other code changes."
         )
     else:
         cols = st.columns([1, 1, 1])
@@ -1009,10 +1073,10 @@ with tab3:
 # TAB 4 - MODEL CENTER
 # ---------------------------------------------------------
 with tab4:
-    st.markdown("### Saved model outputs and comparisons")
+    st.markdown("### Model results and comparisons")
 
     if phase3_metrics_df is not None and not phase3_metrics_df.empty:
-        st.markdown("#### Phase 3 tuned CatBoost")
+        st.markdown("#### Tuned CatBoost")
         show_cols = [
             "selected_candidate",
             "MAE",
@@ -1027,7 +1091,7 @@ with tab4:
         st.dataframe(phase3_metrics_df[show_cols], use_container_width=True, hide_index=True)
 
     if phase3_improvement_df is not None and not phase3_improvement_df.empty:
-        st.markdown("#### CatBoost phase 2 vs phase 3")
+        st.markdown("#### Baseline vs tuned CatBoost")
         st.dataframe(phase3_improvement_df, use_container_width=True, hide_index=True)
 
         plot_df = phase3_improvement_df[phase3_improvement_df["metric"].isin(["MAE", "RMSE", "R2"])].copy()
@@ -1038,13 +1102,19 @@ with tab4:
                 var_name="Version",
                 value_name="Value",
             )
+            plot_long["Version"] = plot_long["Version"].replace(
+                {
+                    "phase2_catboost": "Baseline CatBoost",
+                    "phase3_tuned_catboost": "Tuned CatBoost",
+                }
+            )
             fig_phase3 = px.bar(
                 plot_long,
                 x="metric",
                 y="Value",
                 color="Version",
                 barmode="group",
-                title="CatBoost improvement after tuning",
+                title="Baseline vs tuned CatBoost",
             )
             fig_phase3.update_layout(height=350)
             st.plotly_chart(fig_phase3, use_container_width=True)
