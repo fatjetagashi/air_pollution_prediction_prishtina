@@ -336,13 +336,9 @@ def save_shap_outputs(model: CatBoostRegressor, test_df: pd.DataFrame, feature_c
 
 
 def season_name(month: int) -> str:
-    if month in [12, 1, 2]:
-        return "Winter"
-    if month in [3, 4, 5]:
-        return "Spring"
-    if month in [6, 7, 8]:
-        return "Summer"
-    return "Autumn"
+    if month in [10, 11, 12, 1, 2, 3, 4]:
+        return "Heating season"
+    return "Cooling season"
 
 
 def save_time_stability_outputs(df: pd.DataFrame, feature_cols: list[str], params: dict[str, object], scaler: object) -> None:
@@ -394,7 +390,10 @@ def save_time_stability_outputs(df: pd.DataFrame, feature_cols: list[str], param
             "season": season,
             **calculate_metrics(group["actual_pm25"].values, group["pred_pm25"].values),
         })
-    season_df = pd.DataFrame(season_rows).sort_values("season")
+    season_df = pd.DataFrame(season_rows)
+    season_order = ["Heating season", "Cooling season"]
+    season_df["season"] = pd.Categorical(season_df["season"], categories=season_order, ordered=True)
+    season_df = season_df.sort_values("season")
     season_df.to_csv(DATA_DIR / "catboost_tuned_seasonal_stability.csv", index=False)
 
     month_rows = []
