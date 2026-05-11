@@ -46,7 +46,6 @@
    - [Teknikat e zbatuara dhe lidhja me lëndën](#teknikat-e-zbatuara-dhe-lidhja-me-lëndën)
    - [Ekzekutimi i projektit](#ekzekutimi-i-projektit)
    - [Rezultati final i pipeline-it](#rezultati-final-i-pipeline-it)
-   - [Zgjerime në vazhdim](#zgjerime-në-vazhdim)
 6. [02 Modelimi dhe analiza](#02-modelimi-dhe-analiza)
    - [Qasja e përgjithshme](#qasja-e-përgjithshme)
    - [CatBoost për parashikimin e PM2.5](#catboost-për-parashikimin-e-pm25)
@@ -59,12 +58,21 @@
    - [Krahasimi i harmonizuar i modeleve](#krahasimi-i-harmonizuar-i-modeleve)
    - [Rezultatet, metrikat dhe interpretimi i fazës së dytë](#rezultatet-metrikat-dhe-interpretimi-i-fazës-së-dytë)
    - [Artefaktet e krijuara nga modelet](#artefaktet-e-krijuara-nga-modelet)
-  - [Vizualizimet e fazës së dytë](#vizualizimet-e-fazës-së-dytë)
+   - [Vizualizimet e fazës së dytë](#vizualizimet-e-fazës-së-dytë)
    - [Rezultati i zgjeruar i pipeline-it](#rezultati-i-zgjeruar-i-pipeline-it)
 7. [03 Rievaluimi dhe përmirësimi i modelit](#03-rievaluimi-dhe-përmirësimi-i-modelit)
-8. [Zgjerime në vazhdim](#zgjerime-në-vazhdim)
-9. [Anëtarët e grupit](#anëtarët-e-grupit)
-10. [Acknowledgments](#acknowledgments)
+   - [Rrjedha metodologjike e fazës së tretë](#rrjedha-metodologjike-e-fazës-së-tretë)
+   - [Pika fillestare e fazës së tretë](#pika-fillestare-e-fazës-së-tretë)
+   - [Fine-tuning i CatBoost](#fine-tuning-i-catboost)
+   - [Krahasimi CatBoost faza 2 kundrejt fazës 3](#krahasimi-catboost-faza-2-kundrejt-fazës-3)
+   - [Interpretueshmëria e modelit](#interpretueshmëria-e-modelit)
+   - [Stabiliteti kohor dhe sezonal](#stabiliteti-kohor-dhe-sezonal)
+   - [Snapshot offline për parashikim të ditës së ardhshme](#snapshot-offline-për-parashikim-të-ditës-së-ardhshme)
+   - [Ekzekutimi dhe riprodhueshmëria e fazës së tretë](#ekzekutimi-dhe-riprodhueshmëria-e-fazës-së-tretë)
+   - [Artefaktet e fazës së tretë](#artefaktet-e-fazës-së-tretë)
+   - [Interpretimi final i fazës së tretë](#interpretimi-final-i-fazës-së-tretë)
+8. [Anëtarët e grupit](#anëtarët-e-grupit)
+9. [Acknowledgments](#acknowledgments)
 
 ---
 
@@ -93,6 +101,8 @@ Ky projekt demonstron të gjithë ciklin e përgatitjes së të dhënave: nga ko
 
 Në fazën e dytë, dataset-i final `data/phase_1/4E_selected_dataset.csv` është përdorur për modelim, krahasim dhe interpretim të avancuar. Konkretisht, janë implementuar tre modele supervised (`CatBoostRegressor`, `LightGBM`, `SARIMAX`) për parashikimin e `PM2.5`, si dhe tre modele unsupervised (`HDBSCAN`, `Gaussian Mixture`, `Isolation Forest`) për identifikimin e regjimeve mjedisore, cluster-ëve, noise points dhe anomalive. Për më tepër, rezultatet e të gjitha modeleve janë harmonizuar në `data/phase_2/` dhe `pictures/phase_2/`, në mënyrë që krahasimi dhe dokumentimi të jenë sa më të qarta dhe të riprodhueshme.
 
+Në fazën e tretë, projekti fokusohet në rievaluimin dhe përmirësimin e modelit më të mirë supervised. `CatBoost` është tunuar në mënyrë të kontrolluar, është krahasuar me versionin e fazës së dytë, është interpretuar me `feature importance` dhe `SHAP`, dhe është lidhur me një përdorim praktik për forecast 24-orësh të `PM2.5` duke kombinuar planin day-ahead të prodhimit të energjisë nga KOSTT me parashikimin e motit nga Open-Meteo.
+
 ---
 
 ## Qëllimi i punimit
@@ -105,12 +115,13 @@ Qëllimi kryesor i këtij projekti është të ndërtojë një dataset të past�
 
 me fokus të veçantë në përdorimin e këtyre të dhënave për parashikimin e `PM2.5`.
 
-Nga pikëpamja akademike, projekti është ndërtuar në dy shtresa të lidhura ngushtë:
+Nga pikëpamja akademike, projekti është ndërtuar në tre shtresa të lidhura ngushtë:
 
 - **faza e parë**, ku ndërtohet dataset-i final i pastër dhe model-ready;
-- **faza e dytë**, ku testohet vlera reale e këtij dataset-i për regresion, clustering dhe anomaly detection.
+- **faza e dytë**, ku testohet vlera reale e këtij dataset-i për regresion, clustering dhe anomaly detection;
+- **faza e tretë**, ku modeli më i mirë supervised përmirësohet, interpretohet dhe përdoret për një forecast praktik 24-orësh.
 
-Një komponent plotësues i rëndësishëm është edhe `app.py`, i cili shërben si dashboard interaktiv dhe e bën më të lehtë demonstrimin vizual të ndikimit të energjisë dhe motit në ndotjen e ajrit.
+Një komponent plotësues i rëndësishëm është edhe `app.py`, i cili shërben si dashboard interaktiv dhe e bën më të lehtë demonstrimin vizual të historikut, skenarëve, rezultateve të modeleve dhe forecast-it praktik për ditën e ardhshme.
 
 Objektivat kryesore janë:
 
@@ -123,20 +134,23 @@ Objektivat kryesore janë:
 - të eliminohet multikolineariteti i tepërt përmes VIF-based feature selection;
 - të përdoret dataset-i final i përzgjedhur për ndërtimin dhe validimin e modeleve supervised për parashikimin e `PM2.5`;
 - të analizohet struktura e brendshme e të dhënave përmes metodave unsupervised clustering dhe anomaly detection;
+- të rievaluohet dhe përmirësohet modeli më i mirë supervised përmes tuning, interpretueshmërisë dhe stabilitetit kohor;
+- të demonstrohet përdorimi praktik i modelit për forecast 24-orësh duke përdorur burime të jashtme operative si KOSTT dhe Open-Meteo;
 - të ndërtohet një dokumentim i plotë, i detajuar dhe profesional për të gjithë ciklin e projektit.
 
 ---
 
 ## Dashboard
 
-Ky projekt përfshin edhe një dashboard interaktiv të ndërtuar me Streamlit në `app.py`, i cili shërben si shtresë vizuale dhe demonstrative mbi të gjithë pipeline-in. Në versionin aktual, dashboard-i nuk është më vetëm një simulator i thjeshtë, por një mjedis i zgjeruar ku bashkohen eksplorimi i të dhënave historike, simulimi i faktorëve kryesorë dhe prezantimi i rezultateve të modeleve të fazës së dytë.
+Ky projekt përfshin edhe një dashboard interaktiv të ndërtuar me Streamlit në `app.py`, i cili shërben si shtresë vizuale dhe demonstrative mbi të gjithë pipeline-in. Në versionin aktual, dashboard-i nuk është më vetëm një simulator i thjeshtë, por një mjedis i zgjeruar ku bashkohen eksplorimi i të dhënave historike, testimi i skenarëve, prezantimi i rezultateve të modeleve dhe forecast-i praktik 24-orësh i fazës së tretë.
 
 Nga pikëpamja funksionale, dashboard-i lejon:
 
 - manipulimin interaktiv të parametrave energjetikë dhe meteorologjikë;
 - shikimin e ndikimit të tyre në ndotësit kryesorë atmosferikë;
 - paraqitjen më të qartë të rolit të `PM2.5` si target kryesor i projektit;
-- dhe interpretimin më intuitiv të rezultateve të modeleve supervised dhe unsupervised.
+- interpretimin më intuitiv të rezultateve të modeleve supervised dhe unsupervised;
+- shfaqjen e snapshot-it të ruajtur për forecast-in e ditës së ardhshme nga KOSTT, Open-Meteo dhe `CatBoost` i tunuar.
 
 Në këtë version të zgjeruar, dashboard-i pasqyron edhe gjashtë modelet kryesore të përdorura në fazën e dytë:
 
@@ -148,17 +162,28 @@ Kjo do të thotë se `app.py` funksionon si nyje lidhëse mes:
 - të dhënave të pastruara dhe të përpunuara;
 - modeleve të trajnuara;
 - figurave dhe rezultateve të ruajtura në repo;
+- snapshot-it praktik të fazës së tretë;
 - dhe prezantimit praktik të projektit në formë të kuptueshme për përdoruesin ose profesorin.
 
-Prandaj, nga ana e dokumentimit, është më e arsyeshme që ky komponent të paraqitet menjëherë pas qëllimit të punimit, sepse e tregon që projekti nuk përfundon vetëm me skripta analitikë, por shtrihet edhe në një shtresë prezantimi interaktiv.
+Prandaj, nga ana e dokumentimit, ky komponent paraqitet menjëherë pas qëllimit të punimit, sepse tregon që projekti nuk përfundon vetëm me skripta analitikë, por shtrihet edhe në një shtresë prezantimi interaktiv.
 
-<img width="1920" height="901" alt="image" src="https://github.com/user-attachments/assets/66cd2439-bb97-440b-baf5-5ec97bbc7aee" />
-<img width="954" height="451" alt="image" src="https://github.com/user-attachments/assets/108326b0-a581-4491-972a-4fb8c3f6aedc" />
-<img width="958" height="448" alt="{39B7F118-D825-4E3C-94A7-73B1600AE34F}" src="https://github.com/user-attachments/assets/50fb329f-fafe-4573-81de-e3a17e06ae05" />
-<img width="959" height="474" alt="{C69C8447-CABA-4644-B13C-6B22E50C8374}" src="https://github.com/user-attachments/assets/62bc85f7-544e-49f2-85ac-c864c3143746" />
-<img width="958" height="472" alt="{83EC6A35-6FE5-4103-9C78-1DFBB82FD6EF}" src="https://github.com/user-attachments/assets/8237cfd0-2672-4f91-a1f1-a7b556b66237" />
-<img width="958" height="451" alt="{4B83DF69-60B7-4F85-B0DB-46FC1EDD743D}" src="https://github.com/user-attachments/assets/238d6ae6-5986-4e17-9b7f-b3abdbcaf4f8" />
-<img width="957" height="478" alt="{B50EBF5D-65EE-4730-BE13-D8C2F21334DA}" src="https://github.com/user-attachments/assets/f21634cc-099a-4ef2-8341-891684b80d7d" />
+![Dashboard overview](pictures/dashboard/dashboard_overview.png)
+
+Kjo pamje paraqet faqen kryesore të dashboard-it, ku shihen periudha e dataset-it, statusi i modelit dhe seria historike ditore e `PM2.5`.
+
+![Historical scenario replay](pictures/dashboard/dashboard_historical_scenario_replay.png)
+
+Kjo pamje tregon analizën kundërfaktuale, ku përdoruesi mund të ndryshojë prodhimin e energjisë dhe kushtet meteorologjike për të parë si ndryshon parashikimi i `PM2.5`.
+
+![Future forecast](pictures/dashboard/dashboard_future_forecast.png)
+
+Kjo pamje paraqet snapshot-in praktik të fazës së tretë: forecast 24-orësh i `PM2.5` i ndërtuar nga plani day-ahead i KOSTT-it, parashikimi i motit nga Open-Meteo dhe modeli `CatBoost` i tunuar.
+
+![Model center](pictures/dashboard/dashboard_model_center.png)
+
+Kjo pamje përmbledh rezultatet kryesore të modeleve në dashboard dhe e bën më të lehtë prezantimin e performancës së `CatBoost` të tunuar krahas versionit bazë.
+
+Rezultatet e plota të modelimit dokumentohen më poshtë në seksionet e fazës së dytë dhe fazës së tretë me figura, tabela dhe metrika të dedikuara.
 
 ---
 
@@ -197,26 +222,34 @@ AIR_POLLUTION_PREDICTION_PRISHTINA/
 │   │       ├── 4D_feature_scaling.py
 │   │       └── 4E_feature_selection.py
 │   │
-│   └── phase_2/
+│   ├── phase_2/
+│   │   ├── supervised/
+│   │   │   ├── catboost_model/
+│   │   │   │   └── catboost_model.py
+│   │   │   ├── lightgbm_model/
+│   │   │   │   ├── lightgbm_model.py
+│   │   │   │   ├── baseline_model/
+│   │   │   │   └── improved_model/
+│   │   │   └── sarimax_model/
+│   │   │       └── sarimax_model.py
+│   │   ├── unsupervised/
+│   │   │   ├── gaussian_mixture_model/
+│   │   │   │   └── gaussian_mixture_model.py
+│   │   │   ├── hdbscan_model/
+│   │   │   │   └── hdbscan_model.py
+│   │   │   └── isolation_forest_model/
+│   │   │       ├── isolation_forest_model.py
+│   │   │       └── isolation_forest_extended_outputs.py
+│   │   └── comparison/
+│   │       └── build_phase2_standardized_outputs.py
+│
+│   └── phase_3/
 │       ├── supervised/
-│       │   ├── catboost_model/
-│       │   │   └── catboost_model.py
-│       │   ├── lightgbm_model/
-│       │   │   ├── lightgbm_model.py
-│       │   │   ├── baseline_model/
-│       │   │   └── improved_model/
-│       │   └── sarimax_model/
-│       │       └── sarimax_model.py
-│       ├── unsupervised/
-│       │   ├── gaussian_mixture_model/
-│       │   │   └── gaussian_mixture_model.py
-│       │   ├── hdbscan_model/
-│       │   │   └── hdbscan_model.py
-│       │   └── isolation_forest_model/
-│       │       ├── isolation_forest_model.py
-│       │       └── isolation_forest_extended_outputs.py
+│       │   └── catboost_phase3_tuning.py
+│       ├── forecasting/
+│       │   └── build_next_day_forecast_snapshot.py
 │       └── comparison/
-│           └── build_phase2_standardized_outputs.py
+│           └── build_phase3_standardized_outputs.py
 │
 ├── data/
 │   ├── raw/
@@ -237,49 +270,78 @@ AIR_POLLUTION_PREDICTION_PRISHTINA/
 │   │   ├── 4B_skewness_handled.csv
 │   │   ├── 4D_scaled_dataset.csv
 │   │   └── 4E_selected_dataset.csv
-│   └── phase_2/
+│   ├── phase_2/
+│   │   ├── supervised/
+│   │   │   ├── catboost/
+│   │   │   │   ├── catboost_feature_importance.csv
+│   │   │   │   ├── catboost_forecasts.csv
+│   │   │   │   ├── catboost_metrics.csv
+│   │   │   │   ├── catboost_run_info.json
+│   │   │   │   └── catboost_split_summary.csv
+│   │   │   ├── lightgbm_improved/
+│   │   │   │   ├── feature_importance.csv
+│   │   │   │   └── metrics_summary.txt
+│   │   │   └── sarimax/
+│   │   │       ├── sarimax_candidate_results.csv
+│   │   │       ├── sarimax_coefficients.csv
+│   │   │       ├── sarimax_forecasts.csv
+│   │   │       ├── sarimax_metrics.csv
+│   │   │       ├── sarimax_residuals.csv
+│   │   │       ├── sarimax_run_info.json
+│   │   │       └── sarimax_split_summary.csv
+│   │   ├── unsupervised/
+│   │   │   ├── gaussian_mixture/
+│   │   │   │   ├── gmm_clustered_dataset.csv
+│   │   │   │   ├── gmm_cluster_summary.csv
+│   │   │   │   ├── gmm_feature_summary.csv
+│   │   │   │   ├── gmm_metrics.csv
+│   │   │   │   ├── gmm_model_selection.csv
+│   │   │   │   └── gmm_run_info.json
+│   │   │   ├── hdbscan/
+│   │   │   │   ├── hdbscan_clustered_dataset.csv
+│   │   │   │   ├── hdbscan_cluster_summary.csv
+│   │   │   │   ├── hdbscan_feature_summary.csv
+│   │   │   │   ├── hdbscan_metrics.csv
+│   │   │   │   └── hdbscan_run_info.json
+│   │   │   └── isolation_forest/
+│   │   │       ├── isolation_forest_feature_summary.csv
+│   │   │       ├── isolation_forest_metrics.csv
+│   │   │       ├── isolation_forest_run_info.json
+│   │   │       ├── isolation_forest_scored_dataset.csv
+│   │   │       └── isolation_forest_top_anomalies.csv
+│   │   ├── comparison/
+│   │   │   ├── supervised_model_comparison.csv
+│   │   │   └── unsupervised_model_comparison.csv
+│   │   └── phase2_manifest.json
+│   └── phase_3/
 │       ├── supervised/
-│       │   ├── catboost/
-│       │   │   ├── catboost_feature_importance.csv
-│       │   │   ├── catboost_forecasts.csv
-│       │   │   ├── catboost_metrics.csv
-│       │   │   ├── catboost_run_info.json
-│       │   │   └── catboost_split_summary.csv
-│       │   ├── lightgbm_improved/
-│       │   │   ├── feature_importance.csv
-│       │   │   └── metrics_summary.txt
-│       │   └── sarimax/
-│       │       ├── sarimax_candidate_results.csv
-│       │       ├── sarimax_coefficients.csv
-│       │       ├── sarimax_forecasts.csv
-│       │       ├── sarimax_metrics.csv
-│       │       ├── sarimax_residuals.csv
-│       │       ├── sarimax_run_info.json
-│       │       └── sarimax_split_summary.csv
-│       ├── unsupervised/
-│       │   ├── gaussian_mixture/
-│       │   │   ├── gmm_clustered_dataset.csv
-│       │   │   ├── gmm_cluster_summary.csv
-│       │   │   ├── gmm_feature_summary.csv
-│       │   │   ├── gmm_metrics.csv
-│       │   │   ├── gmm_model_selection.csv
-│       │   │   └── gmm_run_info.json
-│       │   ├── hdbscan/
-│       │   │   ├── hdbscan_clustered_dataset.csv
-│       │   │   ├── hdbscan_cluster_summary.csv
-│       │   │   ├── hdbscan_feature_summary.csv
-│       │   │   ├── hdbscan_metrics.csv
-│       │   │   └── hdbscan_run_info.json
-│       │   └── isolation_forest/
-│       │       ├── isolation_forest_feature_summary.csv
-│       │       ├── isolation_forest_metrics.csv
-│       │       ├── isolation_forest_run_info.json
-│       │       ├── isolation_forest_scored_dataset.csv
-│       │       └── isolation_forest_top_anomalies.csv
-│       ├── comparison/
-│       │   ├── supervised_model_comparison.csv
-│       │   └── unsupervised_model_comparison.csv
-│       └── phase2_manifest.json
+│       │   └── catboost_tuned/
+│       │       ├── catboost_tuned_feature_importance.csv
+│       │       ├── catboost_tuned_forecasts.csv
+│       │       ├── catboost_tuned_metrics.csv
+│       │       ├── catboost_tuned_monthly_stability.csv
+│       │       ├── catboost_tuned_oof_predictions.csv
+│       │       ├── catboost_tuned_run_info.json
+│       │       ├── catboost_tuned_seasonal_stability.csv
+│       │       ├── catboost_tuned_shap_global_importance.csv
+│       │       ├── catboost_tuned_timeseries_fold_metrics.csv
+│       │       └── catboost_tuning_candidates.csv
+│       ├── forecasting/
+│       │   ├── external/
+│       │   │   ├── kostt_generation_plan_next_day_snapshot.xlsx
+│       │   │   ├── open_meteo_next_day_weather_snapshot.csv
+│       │   │   └── open_meteo_next_day_weather_snapshot.json
+│       │   ├── kostt_hourly_generation_profile_from_daily_total.csv
+│       │   ├── kostt_next_day_generation_snapshot.csv
+│       │   ├── next_day_forecast_snapshot_run_info.json
+│       │   ├── next_day_pm25_daily_summary_snapshot.csv
+│       │   └── next_day_pm25_hourly_forecast_snapshot.csv
+│       └── comparison/
+│           ├── catboost_phase2_vs_phase3_improvement.csv
+│           ├── catboost_phase3_tuning_reference.csv
+│           ├── next_day_forecast_snapshot_reference.csv
+│           ├── phase2_supervised_reference.csv
+│           └── phase3_comparison_run_info.json
 │
 ├── models/
 │   ├── scaler.pkl
@@ -298,67 +360,96 @@ AIR_POLLUTION_PREDICTION_PRISHTINA/
 │   ├── isolation_forest_model/
 │   │   ├── isolation_forest_feature_columns.pkl
 │   │   └── isolation_forest_model.pkl
-│   └── sarimax_model/
-│       ├── sarimax_feature_columns.pkl
-│       ├── sarimax_pm25_model.pkl
-│       └── sarimax_summary.txt
+│   ├── sarimax_model/
+│   │   ├── sarimax_feature_columns.pkl
+│   │   ├── sarimax_pm25_model.pkl
+│   │   └── sarimax_summary.txt
+│   └── phase_3/
+│       └── catboost_tuned/
+│           ├── catboost_phase3_feature_columns.pkl
+│           └── catboost_phase3_tuned_model.cbm
 │
 └── pictures/
     ├── img.png
+    ├── dashboard/
+    │   ├── dashboard_overview.png
+    │   ├── dashboard_historical_scenario_replay.png
+    │   ├── dashboard_future_forecast.png
+    │   └── dashboard_model_center.png
     ├── phase_1/
     │   ├── pollutant_correlation_heatmap.png
     │   ├── pollutant_vs_predictors_heatmap.png
     │   └── 4C_visualization_before_after/
-    └── phase_2/
+    ├── phase_2/
+    │   ├── supervised/
+    │   │   ├── catboost/
+    │   │   │   ├── catboost_actual_vs_predicted.png
+    │   │   │   ├── catboost_feature_importance.png
+    │   │   │   ├── catboost_forecast_interactive.html
+    │   │   │   ├── catboost_metrics_table.png
+    │   │   │   └── catboost_residual_diagnostics.png
+    │   │   ├── lightgbm_improved/
+    │   │   │   ├── lightgbm_actual_vs_predicted.png
+    │   │   │   ├── lightgbm_feature_importance.png
+    │   │   │   ├── lightgbm_learning_curve.png
+    │   │   │   └── lightgbm_metrics_table.png
+    │   │   └── sarimax/
+    │   │       ├── sarimax_actual_vs_predicted.png
+    │   │       ├── sarimax_coefficients.png
+    │   │       ├── sarimax_forecast_interactive.html
+    │   │       ├── sarimax_metrics_table.png
+    │   │       └── sarimax_residual_diagnostics.png
+    │   ├── unsupervised/
+    │   │   ├── gaussian_mixture/
+    │   │   │   ├── gmm_cluster_profile_heatmap.png
+    │   │   │   ├── gmm_metrics_table.png
+    │   │   │   ├── gmm_model_selection.png
+    │   │   │   ├── gmm_pca_interactive.html
+    │   │   │   ├── gmm_pm25_by_cluster.png
+    │   │   │   └── gmm_scatter.png
+    │   │   ├── hdbscan/
+    │   │   │   ├── hdbscan_feature_shift_panel.png
+    │   │   │   ├── hdbscan_metrics_table.png
+    │   │   │   ├── hdbscan_pm25_by_cluster.png
+    │   │   │   ├── hdbscan_scatter.png
+    │   │   │   └── hdbscan_umap_interactive.html
+    │   │   └── isolation_forest/
+    │   │       ├── isolation_forest_energy.png
+    │   │       ├── isolation_forest_metrics_table.png
+    │   │       ├── isolation_forest_pm25.png
+    │   │       ├── isolation_forest_pm25_zoom.png
+    │   │       ├── isolation_forest_scatter.png
+    │   │       └── isolation_forest_score_distribution.png
+    │   └── comparison/
+    │       ├── supervised_comparison_table.png
+    │       ├── supervised_error_metrics.png
+    │       ├── supervised_feature_panels.png
+    │       ├── supervised_r2_comparison.png
+    │       ├── unsupervised_clustering_quality.png
+    │       ├── unsupervised_comparison_table.png
+    │       ├── unsupervised_feature_panels.png
+    │       ├── unsupervised_pm25_profiles.png
+    │       └── unsupervised_special_ratio_and_groups.png
+    └── phase_3/
         ├── supervised/
-        │   ├── catboost/
-        │   │   ├── catboost_actual_vs_predicted.png
-        │   │   ├── catboost_feature_importance.png
-        │   │   ├── catboost_forecast_interactive.html
-        │   │   ├── catboost_metrics_table.png
-        │   │   └── catboost_residual_diagnostics.png
-        │   ├── lightgbm_improved/
-        │   │   ├── lightgbm_actual_vs_predicted.png
-        │   │   ├── lightgbm_feature_importance.png
-        │   │   ├── lightgbm_learning_curve.png
-        │   │   └── lightgbm_metrics_table.png
-        │   └── sarimax/
-        │       ├── sarimax_actual_vs_predicted.png
-        │       ├── sarimax_coefficients.png
-        │       ├── sarimax_forecast_interactive.html
-        │       ├── sarimax_metrics_table.png
-        │       └── sarimax_residual_diagnostics.png
-        ├── unsupervised/
-        │   ├── gaussian_mixture/
-        │   │   ├── gmm_cluster_profile_heatmap.png
-        │   │   ├── gmm_metrics_table.png
-        │   │   ├── gmm_model_selection.png
-        │   │   ├── gmm_pca_interactive.html
-        │   │   ├── gmm_pm25_by_cluster.png
-        │   │   └── gmm_scatter.png
-        │   ├── hdbscan/
-        │   │   ├── hdbscan_feature_shift_panel.png
-        │   │   ├── hdbscan_metrics_table.png
-        │   │   ├── hdbscan_pm25_by_cluster.png
-        │   │   ├── hdbscan_scatter.png
-        │   │   └── hdbscan_umap_interactive.html
-        │   └── isolation_forest/
-        │       ├── isolation_forest_energy.png
-        │       ├── isolation_forest_metrics_table.png
-        │       ├── isolation_forest_pm25.png
-        │       ├── isolation_forest_pm25_zoom.png
-        │       ├── isolation_forest_scatter.png
-        │       └── isolation_forest_score_distribution.png
+        │   └── catboost_tuned/
+        │       ├── catboost_tuned_actual_vs_predicted.png
+        │       ├── catboost_tuned_feature_importance.png
+        │       ├── catboost_tuned_monthly_stability.png
+        │       ├── catboost_tuned_residual_diagnostics.png
+        │       ├── catboost_tuned_seasonal_stability.png
+        │       ├── catboost_tuned_shap_direction.png
+        │       ├── catboost_tuned_shap_global_importance.png
+        │       └── catboost_tuning_candidates.png
+        ├── forecasting/
+        │   └── next_day_pm25_forecast_snapshot.png
         └── comparison/
-            ├── supervised_comparison_table.png
-            ├── supervised_error_metrics.png
-            ├── supervised_feature_panels.png
-            ├── supervised_r2_comparison.png
-            ├── unsupervised_clustering_quality.png
-            ├── unsupervised_comparison_table.png
-            ├── unsupervised_feature_panels.png
-            ├── unsupervised_pm25_profiles.png
-            └── unsupervised_special_ratio_and_groups.png
+            ├── catboost_phase2_vs_phase3_improvement_table.png
+            ├── catboost_phase2_vs_phase3_metrics.png
+            ├── catboost_phase3_tuning_reference_table.png
+            ├── next_day_forecast_snapshot_table.png
+            ├── phase2_supervised_metrics_reference.png
+            └── phase2_supervised_reference_table.png
 ```
 
 ---
@@ -3763,24 +3854,77 @@ Kjo do të thotë se pipeline-i i ndërtuar në këtë projekt tashmë përbën 
 
 ## 03 Rievaluimi dhe përmirësimi i modelit
 
-Faza e tretë vazhdon logjikën e fazës së dytë, por fokusohet vetëm te modelet supervised. Fillimisht ruhen grafikat dhe tabelat që krahasojnë `LightGBM`, `CatBoost` dhe `SARIMAX`, pastaj puna vazhdon me `CatBoost`, sepse në holdout test të fazës së dytë ishte modeli me `R²` më të lartë.
+Faza e tretë e projektit është ndërtuar si fazë e rievaluimit, përmirësimit dhe aplikimit praktik të modelit më të mirë supervised nga faza e dytë. Sipas kërkesave të projektit, kjo fazë nuk synon vetëm të prodhojë një rezultat të ri numerik, por të tregojë qartë çfarë është përmirësuar, pse është bërë ai përmirësim, si krahasohet me fazën paraprake dhe si mund të përdoret rezultati në një skenar më praktik.
 
-Qëllimi i kësaj faze nuk është ndërtimi i një modeli krejtësisht të ri, por rievaluimi i modelit më të mirë dhe përmirësimi i tij përmes tuning të kontrolluar të hiperparametrave. Për këtë arsye është krijuar folderi:
+Në fazën e dytë u krahasuan tre modele supervised për parashikimin e `PM2.5`: `LightGBM`, `CatBoost` dhe `SARIMAX`. Për fazën e tretë fokusi u vendos te `CatBoost`, sepse në holdout test të fazës së dytë kishte `R²` më të lartë se modelet e tjera supervised, ndërsa ruante edhe fleksibilitet të mirë për tuning, interpretim dhe integrim në dashboard.
+
+Qëllimi kryesor i fazës së tretë është:
+
+- rievaluimi i modelit më të mirë supervised nga faza e dytë;
+- fine-tuning i kontrolluar i hiperparametrave të `CatBoost`;
+- krahasim i drejtpërdrejtë mes `CatBoost` të fazës 2 dhe `CatBoost` të fazës 3;
+- analizë e interpretueshmërisë përmes `feature importance` dhe `SHAP`;
+- vlerësim i stabilitetit në periudha të ndryshme kohore;
+- krijim i një snapshot-i praktik për parashikimin e `PM2.5` për ditën e ardhshme;
+- përgatitje e rezultateve në formë të qartë për dokumentim, prezantim dhe dashboard.
+
+Implementimi i fazës së tretë ndodhet në:
 
 - `src/phase_3/supervised/catboost_phase3_tuning.py`
 - `src/phase_3/forecasting/build_next_day_forecast_snapshot.py`
 - `src/phase_3/comparison/build_phase3_standardized_outputs.py`
 
-Output-et ruhen në:
+Output-et kryesore ruhen në:
 
 - `data/phase_3/supervised/catboost_tuned/`
 - `data/phase_3/forecasting/`
 - `data/phase_3/comparison/`
-- `pictures/phase_3/`
+- `pictures/phase_3/supervised/catboost_tuned/`
+- `pictures/phase_3/forecasting/`
+- `pictures/phase_3/comparison/`
+
+---
+
+### Rrjedha metodologjike e fazës së tretë
+
+Faza e tretë është ndërtuar si një zinxhir i kontrolluar eksperimental, në mënyrë që përmirësimi i modelit të jetë i matshëm, i shpjegueshëm dhe i përshtatshëm për demonstrim praktik. Rrjedha metodologjike është:
+
+1. Ruajtja e rezultateve referencë nga faza e dytë për `LightGBM`, `CatBoost` dhe `SARIMAX`.
+2. Përzgjedhja e `CatBoost` si model kryesor për fazën e tretë, bazuar në performancën më të mirë supervised në holdout test.
+3. Testimi i disa konfigurimeve të kontrolluara të hiperparametrave, pa ndryshuar target-in dhe pa prishur ndarjen kronologjike të të dhënave.
+4. Zgjedhja e kandidatit final sipas `validation_RMSE`, ndërsa metrikat përfundimtare raportohen në test set.
+5. Krahasimi i drejtpërdrejtë mes `CatBoost` të fazës së dytë dhe `CatBoost` të tunuar në fazën e tretë.
+6. Analiza vizuale e parashikimeve dhe residualeve për të parë sjelljen e modelit, jo vetëm metrikat numerike.
+7. Interpretimi i modelit me `feature importance` dhe `SHAP`, për të kuptuar cilat tipare ndikojnë më shumë në forecast.
+8. Vlerësimi i stabilitetit kohor me `TimeSeriesSplit` dhe analizë sipas profileve `Heating/Cooling`.
+9. Ndërtimi i një snapshot-i praktik për forecast 24-orësh duke përdorur planin day-ahead të KOSTT-it dhe parashikimin e motit nga Open-Meteo.
+10. Shfaqja e rezultateve të ruajtura në dashboard, në mënyrë që projekti të jetë i prezantueshëm edhe pa refresh online në momentin e mbrojtjes.
+
+Kjo rrjedhë e bën fazën e tretë më shumë sesa një tuning të thjeshtë: ajo e lidh modelin me interpretueshmëri, stabilitet dhe përdorim praktik.
+
+---
+
+### Pika fillestare e fazës së tretë
+
+Para tuning-ut, u ruajt një referencë e qartë e performancës së modeleve supervised nga faza e dytë. Kjo është e rëndësishme sepse faza e tretë duhet të lexohet si vazhdim dhe përmirësim i fazës paraprake, jo si eksperiment i shkëputur.
+
+![Phase 2 Supervised Reference Table](pictures/phase_3/comparison/phase2_supervised_reference_table.png)
+
+Kjo tabelë paraqet rezultatet kryesore të modeleve supervised të fazës së dytë dhe tregon pse `CatBoost` u zgjodh si kandidat për rievaluim.
+
+![Phase 2 Supervised Metrics Reference](pictures/phase_3/comparison/phase2_supervised_metrics_reference.png)
+
+Kjo figurë krahason vizualisht metrikat kryesore të fazës së dytë dhe vendos bazën nga ku nis përmirësimi në fazën e tretë.
+
+Duhet theksuar se `LightGBM` raportohet me `TimeSeriesSplit CV mean`, ndërsa `CatBoost` dhe `SARIMAX` raportohen me `chronological holdout test`. Prandaj, krahasimi është shumë i dobishëm për orientim metodologjik, por nuk duhet interpretuar si krahasim plotësisht identik një-me-një.
+
+---
 
 ### Fine-tuning i CatBoost
 
-Në vend të një kërkimi shumë kompleks, janë testuar disa konfigurime konservative të `CatBoostRegressor`, duke ndryshuar kryesisht:
+Në vend të një kërkimi shumë të gjerë dhe të paarsyetuar, në fazën e tretë u përdor tuning konservativ. Kjo qasje është më e përshtatshme akademikisht për këtë projekt, sepse modeli i fazës së dytë tashmë kishte performancë të mirë dhe qëllimi ishte përmirësim i kontrolluar, jo ndryshim radikal i modelit.
+
+Parametrat kryesorë të testuar ishin:
 
 - `depth`
 - `learning_rate`
@@ -3789,85 +3933,246 @@ Në vend të një kërkimi shumë kompleks, janë testuar disa konfigurime konse
 - `bagging_temperature`
 - `early_stopping_rounds`
 
-Modeli final është zgjedhur sipas `validation_RMSE`, ndërsa rezultatet finale janë raportuar në holdout test, njëjtë si në fazën e dytë.
+Modeli final u zgjodh sipas `validation_RMSE`, ndërsa metrikat finale u raportuan në holdout test. Kjo ruan ndarjen metodologjike mes përzgjedhjes së modelit dhe vlerësimit final.
 
-| Metrika | CatBoost faza 2 | CatBoost faza 3 | Përmirësimi |
-|---|---:|---:|---:|
-| MAE | 2.6918 | 2.6794 | 0.0124 |
-| RMSE | 4.3210 | 4.3002 | 0.0208 |
-| R² | 0.8147 | 0.8165 | 0.0018 |
-| MAPE (%) | 23.4860 | 23.3603 | 0.1257 |
-| SMAPE (%) | 21.5382 | 21.4653 | 0.0729 |
+#### Kandidati final i zgjedhur
 
-Përmirësimi është modest, por i qëndrueshëm dhe metodologjikisht i pastër. Kjo tregon se modeli i fazës së dytë tashmë ishte mjaft i fortë, ndërsa tuning-u i fazës së tretë e reduktoi lehtë gabimin dhe overfitting-un pa e komplikuar kodin.
+| Parametri | Vlera |
+|---|---:|
+| Candidate | `strong_regularized_depth6` |
+| `depth` | 6 |
+| `learning_rate` | 0.02 |
+| `l2_leaf_reg` | 10 |
+| `random_strength` | 2.0 |
+| `bagging_temperature` | 0.8 |
+| `early_stopping_rounds` | 100 |
+| `best_iteration` | 1137 |
+| `validation_RMSE` | 1.9458 |
+| `test_RMSE` | 4.3002 |
+| `test_R²` | 0.8165 |
+
+Ky konfigurim është më i rregulluar se modeli referencë i fazës së dytë, sepse përdor `l2_leaf_reg` më të lartë, `learning_rate` më të ulët dhe numër më të madh iteracionesh. Kjo e bën modelin më gradual në mësim dhe më të kontrolluar ndaj overfitting-ut.
+
+![CatBoost Tuning Candidates](pictures/phase_3/supervised/catboost_tuned/catboost_tuning_candidates.png)
+
+Kjo figurë tregon krahasimin e kandidatëve të tuning-ut sipas `validation_RMSE` dhe `test_RMSE`.
+
+![CatBoost Phase 3 Tuning Reference Table](pictures/phase_3/comparison/catboost_phase3_tuning_reference_table.png)
+
+Kjo tabelë paraqet kandidatët kryesorë të fazës së tretë dhe ndihmon të shihet pse konfigurimi final u zgjodh mbi bazë validimi.
+
+---
+
+### Krahasimi CatBoost faza 2 kundrejt fazës 3
+
+Rezultatet e fazës së tretë tregojnë një përmirësim modest, por konsistent në të gjitha metrikat kryesore. Kjo është sjellje e pritshme, sepse modeli i fazës së dytë ishte tashmë mjaft i fortë.
+
+| Metrika | CatBoost faza 2 | CatBoost faza 3 | Përmirësimi absolut | Përmirësimi relativ |
+|---|---:|---:|---:|---:|
+| MAE | 2.6918 | 2.6794 | 0.0124 | 0.46% |
+| RMSE | 4.3210 | 4.3002 | 0.0208 | 0.48% |
+| R² | 0.8147 | 0.8165 | 0.0018 | 0.22% |
+| MAPE (%) | 23.4860 | 23.3603 | 0.1257 | 0.54% |
+| SMAPE (%) | 21.5382 | 21.4653 | 0.0729 | 0.34% |
+
+Përmirësimi nuk duhet prezantuar si ndryshim i madh në performancë, por si fine-tuning i suksesshëm dhe metodologjikisht i pastër. Vlera më e madhe e fazës së tretë është kombinimi i përmirësimit numerik me interpretueshmëri, stabilitet dhe aplikim praktik.
 
 ![CatBoost Phase 2 vs Phase 3](pictures/phase_3/comparison/catboost_phase2_vs_phase3_metrics.png)
 
-### Kontributi 1: Explainable AI me SHAP
+Kjo figurë krahason metrikat kryesore të `CatBoost` para dhe pas tuning-ut.
 
-Për të bërë modelin më të kuptueshëm për përdorues të zakonshëm, në fazën e tretë është shtuar interpretimi me `SHAP`. Kjo ndihmon të shpjegohet jo vetëm çfarë parashikon modeli, por edhe pse arrin në atë parashikim.
+![CatBoost Phase 2 vs Phase 3 Improvement Table](pictures/phase_3/comparison/catboost_phase2_vs_phase3_improvement_table.png)
 
-SHAP tregon ndikimin mesatar të secilit feature në parashikimin e `PM2.5`. Kjo është më e interpretueshme se vetëm `feature importance`, sepse lidhet drejtpërdrejt me kontributin e feature-ave në output-in e modelit.
+Kjo tabelë përmbledh përmirësimin absolut dhe relativ të modelit të fazës së tretë kundrejt modelit të fazës së dytë.
+
+#### Parashikimi dhe diagnostika e gabimeve
+
+Përveç metrikave numerike, modeli i tunuar u analizua edhe vizualisht për të parë se si ndjek serinë reale të `PM2.5` dhe si shpërndahen residualet.
+
+![Tuned CatBoost Actual vs Predicted](pictures/phase_3/supervised/catboost_tuned/catboost_tuned_actual_vs_predicted.png)
+
+Kjo figurë tregon përputhjen mes vlerave reale dhe parashikimeve të `CatBoost` të tunuar në test set.
+
+![Tuned CatBoost Residual Diagnostics](pictures/phase_3/supervised/catboost_tuned/catboost_tuned_residual_diagnostics.png)
+
+Kjo figurë paraqet shpërndarjen e residualeve dhe ndihmon të kuptohet nëse modeli ka gabime të përqendruara apo devijime të mëdha në episode të caktuara.
+
+---
+
+### Interpretueshmëria e modelit
+
+Një nga kontributet kryesore të fazës së tretë është kalimi nga raportimi i thjeshtë i metrikave drejt shpjegimit të modelit. Për këtë arsye janë përdorur dy forma interpretimi:
+
+- `feature importance`, që tregon peshën relative të feature-ave në model;
+- `SHAP`, që tregon kontributin mesatar të secilit feature në parashikim.
+
+![Tuned CatBoost Feature Importance](pictures/phase_3/supervised/catboost_tuned/catboost_tuned_feature_importance.png)
+
+Kjo figurë tregon cilat feature-a kanë ndikimin më të madh në modelin final të tunuar.
 
 ![SHAP Global Importance](pictures/phase_3/supervised/catboost_tuned/catboost_tuned_shap_global_importance.png)
 
-### Kontributi 2: Stabiliteti sezonal
+Kjo figurë përdor `mean absolute SHAP value` për të treguar ndikimin mesatar të feature-ave në parashikimin e `PM2.5`.
 
-Përveç metrikave të përgjithshme, modeli është vlerësuar edhe me `TimeSeriesSplit`, duke analizuar performancën sipas sezoneve dhe muajve. Kjo është e rëndësishme sepse ndotja e ajrit nuk sillet njësoj gjatë gjithë vitit: dimri, periudhat me stagnim ajri, era, shiu dhe ndryshimet në prodhim të energjisë mund ta ndryshojnë sjelljen e `PM2.5`.
+![SHAP Direction](pictures/phase_3/supervised/catboost_tuned/catboost_tuned_shap_direction.png)
 
-Ky kontribut tregon nëse modeli mbetet i qëndrueshëm edhe kur ndryshojnë kushtet sezonale.
+Kjo figurë tregon drejtimin e ndikimit të feature-ave kryesorë, pra nëse vlerat më të larta të tyre priren ta rrisin apo ta ulin parashikimin e modelit.
+
+Sipas rezultateve të `SHAP`, feature-at më të rëndësishme janë:
+
+| Feature | Mean absolute SHAP | Interpretimi |
+|---|---:|---|
+| `pm25_lag_1` | 0.7939 | Gjendja e ndotjes në orën paraprake është faktori dominues. |
+| `month_cos` | 0.1035 | Modeli kap strukturë sezonale në të dhëna. |
+| `pm25_lag_24` | 0.0734 | Ekziston cikël ditor dhe varësi nga e njëjta orë e ditës paraprake. |
+| `hour_sin` | 0.0561 | Ora e ditës ndikon në dinamikën e ndotjes. |
+| `hour_cos` | 0.0557 | Ritmi ditor ka rol të rëndësishëm në parashikim. |
+| `pollution_stagnation_index` | 0.0474 | Kushtet e stagnimit atmosferik ndikojnë në rritjen e ndotjes. |
+
+Ky interpretim është shumë i rëndësishëm për projektin, sepse tregon se `CatBoost` nuk po mëson vetëm marrëdhënie të rastësishme numerike, por po mbështetet në faktorë që kanë kuptim fizik dhe kohor: memoria e ndotjes, cikli ditor, sezonaliteti dhe kushtet atmosferike.
+
+---
+
+### Stabiliteti kohor dhe sezonal
+
+Për të kuptuar nëse modeli mbetet i qëndrueshëm në periudha të ndryshme, është përdorur `TimeSeriesSplit(n_splits=5)`. Kjo krijon validime kronologjike ku modeli trajnohet në të kaluarën dhe testohet në segmente më të reja kohore.
+
+Rezultatet sipas folds janë:
+
+| Fold | Periudha e validimit | MAE | RMSE | R² |
+|---:|---|---:|---:|---:|
+| 1 | 2024-05-26 -> 2024-08-04 | 1.8638 | 2.7602 | 0.6446 |
+| 2 | 2024-08-04 -> 2025-04-08 | 3.6857 | 6.4211 | 0.6159 |
+| 3 | 2025-04-08 -> 2025-07-04 | 1.4183 | 2.1399 | 0.7646 |
+| 4 | 2025-07-04 -> 2025-09-12 | 1.2534 | 1.9648 | 0.7387 |
+| 5 | 2025-09-12 -> 2025-11-27 | 2.5258 | 4.1469 | 0.8214 |
+
+Fold-i i dytë ka gabimin më të lartë, sepse përfshin një periudhë më të vështirë kohore dhe më heterogjene. Kjo është pikë e rëndësishme për interpretim: modeli nuk ka performancë identike gjatë gjithë vitit, por kjo është e pritshme në të dhëna reale të cilësisë së ajrit.
+
+Në kod, stabiliteti sezonal është ndërtuar mbi dy profile funksionale që janë të përshtatshme për ndotjen e ajrit në Prishtinë:
+
+- `Heating season`, që përfaqëson periudhat me ndikim më të madh të ngrohjes, stagnimit atmosferik dhe episodeve më të forta të ndotjes;
+- `Cooling season`, që përfaqëson periudhat më të favorshme për shpërndarje atmosferike dhe nivele më të ulëta të ndotjes.
+
+| Periudha | MAE | RMSE | MAPE (%) | SMAPE (%) | R² | Pika vlerësimi |
+|---|---:|---:|---:|---:|---:|---:|
+| Heating season | 3.5576 | 5.9664 | 24.4300 | 23.6458 | 0.6864 | 2472 |
+| Cooling season | 1.4917 | 2.2868 | 18.6526 | 17.9410 | 0.7168 | 5293 |
+
+Rezultatet tregojnë se modeli ka gabim më të lartë në `Heating season`, që është e pritshme sepse në këtë periudhë ndotja zakonisht ka dinamikë më komplekse: më shumë stagnim ajri, episode më të forta të `PM2.5` dhe variabilitet më të madh. Kjo e bën krahasimin `Heating/Cooling` të dobishëm për të kuptuar stabilitetin e modelit në kushte të ndryshme atmosferike.
 
 ![Seasonal Stability](pictures/phase_3/supervised/catboost_tuned/catboost_tuned_seasonal_stability.png)
 
-### Snapshot offline për parashikim të ditës
+Kjo figurë krahason performancën mes `Heating season` dhe `Cooling season`.
 
-Për të shmangur varësinë nga refresh-i live në ditën e mbrojtjes, është krijuar edhe një snapshot offline për parashikimin e ditës së ardhshme. Skripta:
+![Monthly Stability](pictures/phase_3/supervised/catboost_tuned/catboost_tuned_monthly_stability.png)
 
-1. shkarkon dokumentin zyrtar të KOSTT-it `Plani i prodhimit total të energjisë elektrike për ditën në vijim`;
-2. ruan Excel-in në `data/phase_3/forecasting/external/`;
-3. merr motin orar nga Open-Meteo;
-4. e shpërndan totalin ditor të KOSTT-it në 24 orë sipas profilit historik të prodhimit;
-5. gjeneron parashikim 24-orësh me CatBoost-in e tunuar;
-6. ruan përmbledhjen ditore si CSV dhe figurë.
+Kjo figurë tregon si ndryshon `RMSE` sipas muajve dhe ndihmon të identifikohen periudhat ku modeli është më i pasigurt.
 
-Snapshot-i i ruajtur për demo është:
+---
 
-| Data | KOSTT MWh | PM2.5 mesatar | PM2.5 maksimal | Risk |
-|---|---:|---:|---:|---|
-| 2026-05-09 | 4767.878 | 6.6211 | 10.1625 | Low |
+### Snapshot offline për parashikim të ditës së ardhshme
+
+Për ta lidhur modelin me një skenar më praktik, në fazën e tretë është krijuar edhe një snapshot offline për parashikimin e `PM2.5` për ditën e ardhshme. Ky nuk përdoret si evaluim i saktësisë, sepse për ditën e parashikuar nuk ka menjëherë ground truth, por si demonstrim i përdorimit praktik të modelit.
+
+Skripta `build_next_day_forecast_snapshot.py` kryen këto hapa:
+
+1. shkarkon dokumentin zyrtar të KOSTT-it për planin e prodhimit të energjisë për ditën në vijim;
+2. ruan snapshot-in në `data/phase_3/forecasting/external/`;
+3. merr parashikimin orar të motit nga Open-Meteo;
+4. e shpërndan totalin ditor të KOSTT-it në 24 orë sipas profilit historik;
+5. përdor modelin `CatBoost` të tunuar për të gjeneruar forecast 24-orësh;
+6. ruan rezultatet si CSV dhe figurë për përdorim në prezantim dhe dashboard.
+
+Snapshot-i i ruajtur për demonstrim është:
+
+| Data | KOSTT MWh | PM2.5 mesatar | PM2.5 maksimal | PM2.5 minimal | Risk |
+|---|---:|---:|---:|---:|---|
+| 2026-05-09 | 4767.878 | 6.6211 | 10.1625 | 4.0161 | Low |
+
+![Next Day Forecast Snapshot Table](pictures/phase_3/comparison/next_day_forecast_snapshot_table.png)
+
+Kjo tabelë përmbledh snapshot-in e ruajtur për forecast-in 24-orësh.
 
 ![Next Day PM2.5 Forecast Snapshot](pictures/phase_3/forecasting/next_day_pm25_forecast_snapshot.png)
 
-Ky dizajn e bën aplikacionin më të sigurt për prezantim: forecast-i i ruajtur mund të shfaqet pa pasur nevojë që KOSTT ta përditësojë file-in në kohë. Refresh-i online mbetet opsional, ndërsa demonstrimi kryesor mbështetet në artefaktet e ruajtura.
+Kjo figurë paraqet forecast-in orar të `PM2.5` për ditën e ardhshme së bashku me profilin e prodhimit të energjisë.
 
-### Interpretimi dhe përdorimi praktik
-
-Pas aplikimit të fazave, projekti arrin të paraqesë një pipeline të plotë: nga mbledhja dhe pastrimi i të dhënave, te krahasimi i modeleve, përmirësimi i modelit më të mirë, interpretimi me SHAP dhe ruajtja e një forecast-i praktik për ditën e ardhshme.
-
-Rezultatet mund të lexohen kështu:
-
-- metrikat `MAE` dhe `RMSE` tregojnë madhësinë mesatare të gabimit në `PM2.5`;
-- `R²` tregon sa mirë modeli shpjegon variacionin e ndotjes;
-- SHAP tregon cilët faktorë ndikojnë më shumë në parashikim;
-- stabiliteti sezonal tregon nëse modeli sillet mirë në kushte të ndryshme gjatë vitit;
-- snapshot-i i ditës e kthen modelin në një shembull praktik për përdorues jo-teknikë.
-
-Kjo mund t'u ndihmojë qytetarëve, institucioneve lokale dhe operatorëve që monitorojnë ndotjen, sepse e përkthen kombinimin e motit dhe energjisë në një sinjal më të lexueshëm për cilësinë e ajrit. Në të ardhmen, modeli mund të zgjerohet me burime më të drejtpërdrejta për emisione, të dhëna live të cilësisë së ajrit dhe validim më të gjatë në kohë.
-
-## Zgjerime në vazhdim
-
-Si vazhdim logjik i kësaj pune, projekti mund të zgjerohet në disa drejtime që do ta forconin edhe më shumë si nga ana akademike, ashtu edhe nga ana praktike:
-
-- zgjerim të parashikimit nga `1-step ahead` në `multi-step forecasting` për horizonte si `24h`, `48h` dhe `72h`, me krahasim të degradimit të performancës sipas horizontit;
-- ndërtim të modeleve `ensemble` ose `hybrid`, ku parashikimet e `LightGBM`, `CatBoost` dhe `SARIMAX` kombinohen për të arritur stabilitet dhe saktësi më të lartë;
-- shtim të burimeve të reja të të dhënave, si indikatorë të trafikut, presion atmosferik, inversion termik, të dhëna satelitore ose të dhëna nga stacione të tjera monitorimi;
-- zgjerim të analizës nga vetëm `PM2.5` edhe drejt ndotësve të tjerë si `PM10`, `NO2` dhe `O3`, me mundësi për modelim shumë-variabël të cilësisë së ajrit;
-- analizë më të thelluar të interpretueshmërisë së modeleve përmes teknikave si `SHAP`, `partial dependence plots` dhe krahasimit të ndikimit të feature-ave në skenarë të ndryshëm sezonalë;
-- validim më të fortë `out-of-time`, duke trajnuar modelin në një interval më të hershëm dhe duke e testuar në një periudhë të re kohore për të matur robustësinë reale të përgjithësimit;
-- ndërtim të një sistemi paralajmërues për episode të larta të ndotjes, ku forecast-i i `PM2.5` lidhet me kategori rreziku dhe me pragje praktike për interpretim publik;
-- zgjerim të dashboard-it ekzistues me monitorim pothuajse në kohë reale, krahasim automatik mes modeleve dhe sinjalizim të drift-it të të dhënave nëse shpërndarjet ndryshojnë me kalimin e kohës.
+Ky dizajn e bën projektin më të sigurt për prezantim, sepse rezultatet mund të shfaqen edhe pa refresh online në momentin e mbrojtjes. Refresh-i nga KOSTT dhe Open-Meteo mbetet i mundur, por demonstrimi kryesor mbështetet në artefakte të ruajtura.
 
 ---
+
+### Ekzekutimi dhe riprodhueshmëria e fazës së tretë
+
+Për ta riprodhuar fazën e tretë në mënyrë të kontrolluar, skriptat ekzekutohen në këtë rend:
+
+```powershell
+python src/phase_3/supervised/catboost_phase3_tuning.py
+python src/phase_3/forecasting/build_next_day_forecast_snapshot.py
+python src/phase_3/comparison/build_phase3_standardized_outputs.py
+```
+
+`catboost_phase3_tuning.py` kryen fine-tuning të modelit `CatBoost`, ruan modelin final në `models/phase_3/catboost_tuned/` dhe krijon metrikat, forecast-et, rëndësinë e veçorive, SHAP dhe stabilitetin kohor. `build_next_day_forecast_snapshot.py` ndërton snapshot-in 24-orësh duke kombinuar planin day-ahead të KOSTT-it me parashikimin e motit nga Open-Meteo. `build_phase3_standardized_outputs.py` i bashkon rezultatet në tabela dhe figura krahasuese për README, dashboard dhe prezantim.
+
+Kjo e bën fazën e tretë të verifikueshme: fillimisht përmirësohet modeli, pastaj krijohet skenari praktik i forecast-it, dhe në fund standardizohen artefaktet për raportim.
+
+---
+
+### Artefaktet e fazës së tretë
+
+Faza e tretë krijon këto artefakte kryesore:
+
+#### Supervised tuning
+
+- `data/phase_3/supervised/catboost_tuned/catboost_tuned_metrics.csv`
+- `data/phase_3/supervised/catboost_tuned/catboost_tuning_candidates.csv`
+- `data/phase_3/supervised/catboost_tuned/catboost_tuned_forecasts.csv`
+- `data/phase_3/supervised/catboost_tuned/catboost_tuned_feature_importance.csv`
+- `data/phase_3/supervised/catboost_tuned/catboost_tuned_shap_global_importance.csv`
+- `data/phase_3/supervised/catboost_tuned/catboost_tuned_timeseries_fold_metrics.csv`
+- `data/phase_3/supervised/catboost_tuned/catboost_tuned_seasonal_stability.csv`
+- `data/phase_3/supervised/catboost_tuned/catboost_tuned_monthly_stability.csv`
+- `models/phase_3/catboost_tuned/catboost_phase3_tuned_model.cbm`
+- `models/phase_3/catboost_tuned/catboost_phase3_feature_columns.pkl`
+
+#### Forecast snapshot
+
+- `data/phase_3/forecasting/next_day_pm25_daily_summary_snapshot.csv`
+- `data/phase_3/forecasting/next_day_pm25_hourly_forecast_snapshot.csv`
+- `data/phase_3/forecasting/kostt_next_day_generation_snapshot.csv`
+- `data/phase_3/forecasting/kostt_hourly_generation_profile_from_daily_total.csv`
+- `data/phase_3/forecasting/external/open_meteo_next_day_weather_snapshot.csv`
+- `data/phase_3/forecasting/external/open_meteo_next_day_weather_snapshot.json`
+
+#### Krahasime dhe tabela
+
+- `data/phase_3/comparison/phase2_supervised_reference.csv`
+- `data/phase_3/comparison/catboost_phase2_vs_phase3_improvement.csv`
+- `data/phase_3/comparison/catboost_phase3_tuning_reference.csv`
+- `data/phase_3/comparison/next_day_forecast_snapshot_reference.csv`
+- `pictures/phase_3/comparison/phase2_supervised_reference_table.png`
+- `pictures/phase_3/comparison/phase2_supervised_metrics_reference.png`
+- `pictures/phase_3/comparison/catboost_phase2_vs_phase3_metrics.png`
+- `pictures/phase_3/comparison/catboost_phase2_vs_phase3_improvement_table.png`
+- `pictures/phase_3/comparison/catboost_phase3_tuning_reference_table.png`
+- `pictures/phase_3/comparison/next_day_forecast_snapshot_table.png`
+
+---
+
+### Interpretimi final i fazës së tretë
+
+Pas fazës së tretë, projekti nuk përfundon vetëm me një model të trajnuar, por me një workflow më të plotë të machine learning:
+
+- modeli më i mirë supervised u rievaluua dhe u përmirësua me tuning të kontrolluar;
+- përmirësimi numerik është modest, por konsistent në të gjitha metrikat kryesore;
+- interpretueshmëria u forcua me `feature importance` dhe `SHAP`;
+- stabiliteti u analizua me `TimeSeriesSplit`, muaj dhe periudha funksionale `Heating/Cooling`;
+- modeli u lidh me një rast praktik për forecast 24-orësh;
+- rezultatet u organizuan në mënyrë të përshtatshme për dokumentim, prezantim dhe dashboard.
+
+Në aspekt praktik, ky projekt mund t'u ndihmojë përdoruesve teknikë dhe jo-teknikë të lexojnë më qartë marrëdhënien mes kushteve meteorologjike, prodhimit të energjisë dhe ndotjes së ajrit. Për qytetarët, kjo mund të shërbejë si sinjal informues për cilësinë e ajrit; për institucione lokale, si bazë për analiza më të avancuara; dhe për punë të ardhshme akademike, si pipeline i riprodhueshëm për forecasting dhe interpretim të ndotjes.
+
+Në këtë mënyrë, faza e tretë e forcon ndjeshëm projektin, sepse e zhvendos nga trajnim modelesh drejt një sistemi më të shpjegueshëm, më të krahasueshëm dhe më praktik. Përveç performancës numerike, projekti tani tregon edhe pse modeli merr vendime të caktuara, si sillet në periudha të ndryshme kohore dhe si mund të përdoret për një forecast 24-orësh.
 
 ## Anëtarët e grupit
 

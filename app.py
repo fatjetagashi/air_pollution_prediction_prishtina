@@ -962,9 +962,9 @@ with tab2:
 # TAB 3 - FUTURE
 # ---------------------------------------------------------
 with tab3:
-    st.markdown("### Recursive future forecast")
+    st.markdown("### KOSTT + weather next-day forecast")
     st.caption(
-        "Using the current sidebar scenario. Any change in `Scenario setup` affects this page."
+        "The stored snapshot is the main next-day PM2.5 forecast. Scenario controls are available in the optional panel below."
     )
 
     if phase3_daily_snapshot_df is not None and not phase3_daily_snapshot_df.empty:
@@ -993,81 +993,87 @@ with tab3:
             fig_snapshot.update_layout(height=340, yaxis_title="PM2.5")
             st.plotly_chart(fig_snapshot, use_container_width=True)
 
-    if not MODEL_READY:
-        st.warning(
-            "Ky seksion kërkon CatBoost model aktiv. "
-            "Once you install `catboost`, forecasting will work without any other code changes."
+    with st.expander("Optional scenario-based 24h forecast", expanded=False):
+        st.caption(
+            "This optional panel starts after the last timestamp in the historical dataset and is separate from the stored KOSTT + weather next-day snapshot above."
         )
-    else:
-        cols = st.columns([1, 1, 1])
 
-        default_future = (last_hist_ts + pd.Timedelta(hours=1)).date()
-        future_date = cols[0].date_input(
-            "Future start date",
-            value=default_future,
-            min_value=default_future,
-            key="future_date",
-        )
-        future_hour = cols[1].slider("Future start hour", 0, 23, int((last_hist_ts + pd.Timedelta(hours=1)).hour))
-        horizon = cols[2].selectbox("Horizon (hours)", [24, 48, 72, 96, 168], index=1)
-
-        start_future_ts = pd.Timestamp(future_date) + pd.Timedelta(hours=int(future_hour))
-
-        if start_future_ts <= last_hist_ts:
-            st.warning("Zgjidh një kohë që është pas fundit të historikut.")
+        if not MODEL_READY:
+            st.warning(
+                "This section requires an active CatBoost model. "
+                "Once you install `catboost`, forecasting will work without any other code changes."
+            )
         else:
-            forecast_df = run_recursive_future_forecast(
-                start_ts=start_future_ts,
-                horizon=int(horizon),
-                df_model_space=df_model,
-                df_display=df_display,
-                model=model,
-                feature_cols=feature_cols,
-                scaler=scaler,
-                settings=settings,
+            cols = st.columns([1, 1, 1])
+    
+            default_future = (last_hist_ts + pd.Timedelta(hours=1)).date()
+            future_date = cols[0].date_input(
+                "Scenario start date",
+                value=default_future,
+                min_value=default_future,
+                key="future_date",
             )
-
-            a1, a2, a3, a4 = st.columns(4)
-            a1.metric("Start", start_future_ts.strftime("%Y-%m-%d %H:%M"))
-            a2.metric("End", forecast_df["timestamp"].iloc[-1].strftime("%Y-%m-%d %H:%M"))
-            a3.metric("Peak PM2.5", f"{forecast_df['PM2.5 forecast'].max():.2f}")
-            a4.metric("Mean PM2.5", f"{forecast_df['PM2.5 forecast'].mean():.2f}")
-
-            fig_forecast = px.line(
-                forecast_df,
-                x="timestamp",
-                y="PM2.5 forecast",
-                markers=True,
-                title="Future PM2.5 forecast path",
-            )
-            fig_forecast.update_layout(height=380, yaxis_title="PM2.5")
-            st.plotly_chart(fig_forecast, use_container_width=True)
-
-            fig_gen = go.Figure()
-            fig_gen.add_trace(
-                go.Scatter(
-                    x=forecast_df["timestamp"],
-                    y=forecast_df["Baseline generation"],
-                    mode="lines",
-                    name="Baseline generation",
+            future_hour = cols[1].slider("Scenario start hour", 0, 23, int((last_hist_ts + pd.Timedelta(hours=1)).hour))
+            cols[2].metric("Horizon", "24 hours")
+            horizon = 24
+    
+            start_future_ts = pd.Timestamp(future_date) + pd.Timedelta(hours=int(future_hour))
+    
+            if start_future_ts <= last_hist_ts:
+                st.warning("Choose a timestamp after the end of the historical dataset.")
+            else:
+                forecast_df = run_recursive_future_forecast(
+                    start_ts=start_future_ts,
+                    horizon=int(horizon),
+                    df_model_space=df_model,
+                    df_display=df_display,
+                    model=model,
+                    feature_cols=feature_cols,
+                    scaler=scaler,
+                    settings=settings,
                 )
-            )
-            fig_gen.add_trace(
-                go.Scatter(
-                    x=forecast_df["timestamp"],
-                    y=forecast_df["Scenario generation"],
-                    mode="lines",
-                    name="Scenario generation",
+    
+                a1, a2, a3, a4 = st.columns(4)
+                a1.metric("Start", start_future_ts.strftime("%Y-%m-%d %H:%M"))
+                a2.metric("End", forecast_df["timestamp"].iloc[-1].strftime("%Y-%m-%d %H:%M"))
+                a3.metric("Peak PM2.5", f"{forecast_df['PM2.5 forecast'].max():.2f}")
+                a4.metric("Mean PM2.5", f"{forecast_df['PM2.5 forecast'].mean():.2f}")
+    
+                fig_forecast = px.line(
+                    forecast_df,
+                    x="timestamp",
+                    y="PM2.5 forecast",
+                    markers=True,
+                    title="Scenario-based 24h PM2.5 forecast path",
                 )
-            )
-            fig_gen.update_layout(
-                title="Baseline vs scenario generation",
-                height=320,
-                yaxis_title="Generation"
-            )
-            st.plotly_chart(fig_gen, use_container_width=True)
-
-            st.dataframe(forecast_df, use_container_width=True, hide_index=True)
+                fig_forecast.update_layout(height=380, yaxis_title="PM2.5")
+                st.plotly_chart(fig_forecast, use_container_width=True)
+    
+                fig_gen = go.Figure()
+                fig_gen.add_trace(
+                    go.Scatter(
+                        x=forecast_df["timestamp"],
+                        y=forecast_df["Baseline generation"],
+                        mode="lines",
+                        name="Baseline generation",
+                    )
+                )
+                fig_gen.add_trace(
+                    go.Scatter(
+                        x=forecast_df["timestamp"],
+                        y=forecast_df["Scenario generation"],
+                        mode="lines",
+                        name="Scenario generation",
+                    )
+                )
+                fig_gen.update_layout(
+                    title="Baseline vs scenario generation",
+                    height=320,
+                    yaxis_title="Generation"
+                )
+                st.plotly_chart(fig_gen, use_container_width=True)
+    
+                st.dataframe(forecast_df, use_container_width=True, hide_index=True)
 
 # ---------------------------------------------------------
 # TAB 4 - MODEL CENTER
