@@ -4174,6 +4174,158 @@ Në aspekt praktik, ky projekt mund t'u ndihmojë përdoruesve teknikë dhe jo-t
 
 Në këtë mënyrë, faza e tretë e forcon ndjeshëm projektin, sepse e zhvendos nga trajnim modelesh drejt një sistemi më të shpjegueshëm, më të krahasueshëm dhe më praktik. Përveç performancës numerike, projekti tani tregon edhe pse modeli merr vendime të caktuara, si sillet në periudha të ndryshme kohore dhe si mund të përdoret për një forecast 24-orësh.
 
+---
+
+### Pamja dhe karakteristikat e dashboard-it Streamlit në fazën e tretë
+
+Përveç skriptave dhe artefakteve të ruajtura, faza e tretë prezantohet edhe përmes dashboard-it interaktiv në `app.py`, i ndërtuar me `Streamlit` dhe `Plotly`. Ky dashboard e bën projektin më të qartë për prezantim, sepse rezultatet nuk mbeten vetëm në tabela statike, por mund të eksplorohen në mënyrë vizuale dhe interaktive.
+
+Dashboard-i hapet me titullin `Prishtina PM2.5 Forecast Studio` dhe është organizuar në katër pamje kryesore:
+
+1. `Overview` - jep një pamje të përgjithshme të dataset-it, periudhës historike, numrit të rreshtave dhe vlerave më të fundit të `PM2.5`.
+2. `Historical scenario replay` - lejon testimin e skenarëve mbi të dhëna historike, duke krahasuar vlerën reale, parashikimin bazë dhe parashikimin pas ndryshimeve të vendosura nga përdoruesi.
+3. `Future forecast` - paraqet snapshot-in 24-orësh të fazës së tretë, të ndërtuar nga plani day-ahead i KOSTT-it dhe parashikimi i motit nga Open-Meteo.
+4. `Model center` - shfaq rezultatet e modeleve, krahasimin `CatBoost` faza 2 kundrejt fazës 3, `SHAP`, stabilitetin sezonal dhe metrikat e ruajtura.
+
+Në anën e majtë dashboard-i ka panelin `Scenario setup`, ku përdoruesi mund të zgjedhë preset-e dhe të ndryshojë faktorë si:
+
+- zhvendosja e prodhimit të energjisë;
+- ndryshimi i temperaturës;
+- ndryshimi i reshjeve;
+- ndryshimi i lagështisë;
+- ndryshimi i shpejtësisë së erës;
+- ndryshimi i drejtimit të erës.
+
+Këto kontrolle e bëjnë dashboard-in të dobishëm për demonstrim, sepse përdoruesi mund të shohë si ndryshon parashikimi i `PM2.5` kur ndryshojnë kushtet atmosferike ose profili i prodhimit të energjisë. Në vend që modeli të shfaqet vetëm si rezultat numerik, Streamlit e paraqet atë si një mjet eksplorues ku mund të kuptohen më lehtë lidhjet mes motit, energjisë dhe ndotjes së ajrit.
+
+Karakteristikat kryesore të dashboard-it janë:
+
+- përdorimi i grafikëve interaktivë `Plotly` për seri kohore, krahasime dhe rezultate të modeleve;
+- shfaqja e metrikave kryesore me `st.metric`, si mesatarja, maksimumi, risku dhe horizonti i parashikimit;
+- përdorimi i tabelave interaktive për forecast-et, rezultatet e modeleve dhe kontrollin e skenarëve;
+- mbështetja në artefakte të ruajtura, që e bën prezantimin stabil edhe nëse nuk bëhet refresh online gjatë demonstrimit;
+- ndarja e qartë e pamjeve në tabs, që e bën aplikacionin më të lehtë për t'u ndjekur nga përdorues teknikë dhe jo-teknikë.
+
+Në këtë mënyrë, Streamlit në fazën e tretë shërben si shtresa praktike e projektit: ai lidh modelin e tunuar `CatBoost`, forecast-in 24-orësh dhe interpretimin e rezultateve në një mjedis të vetëm vizual.
+
+---
+
+### Kush përfiton dhe si?
+
+#### 1. Qytetarët e Prishtinës → Informim më i mirë për cilësinë e ajrit
+
+Parashikimet e `PM2.5` mund t'u ndihmojnë qytetarëve të kuptojnë më herët kur pritet rritje e ndotjes.
+
+Përdoruesit mund të marrin vendime më të informuara për aktivitetet jashtë, sidomos në periudha me rrezik më të lartë.
+
+Forecast-i 24-orësh mund të shërbejë si sinjal i hershëm informues, veçanërisht për fëmijët, të moshuarit dhe personat me probleme respiratore.
+
+#### 2. Institucionet lokale dhe mjedisore → Monitorim dhe planifikim më i mirë
+
+Komuna, institucionet mjedisore dhe organet publike mund ta përdorin këtë qasje si bazë për monitorim më proaktiv të ndotjes.
+
+Modeli ndihmon në identifikimin e periudhave kur ndotja ka gjasa të jetë më e lartë, sidomos gjatë `Heating season`.
+
+Rezultatet mund të përdoren për planifikim të masave parandaluese, informim publik dhe analiza të mëtejshme mjedisore.
+
+#### 3. Sektori i shëndetit publik → Paralajmërim për grupe të ndjeshme
+
+Parashikimi i ndotjes mund të ndihmojë në vlerësimin e periudhave me rrezik më të lartë për shëndetin.
+
+Institucionet shëndetësore mund të përdorin rezultate të tilla për të lidhur episodet e ndotjes me rritjen e ankesave respiratore.
+
+Kjo krijon bazë për rekomandime më të targetuara ndaj grupeve të ndjeshme.
+
+#### 4. Planifikimi urban, energjia dhe transporti → Vendimmarrje më e bazuar në të dhëna
+
+Lidhja mes `PM2.5`, kushteve atmosferike dhe prodhimit të energjisë ndihmon në analizimin e faktorëve që ndikojnë në ndotje.
+
+Skenarët në dashboard mund të përdoren për të kuptuar si ndryshojnë parashikimet kur ndryshojnë kushtet meteorologjike ose profili energjetik.
+
+Kjo është e dobishme për diskutime rreth mobilitetit urban, ngrohjes, energjisë dhe masave lokale për uljen e ndotjes.
+
+#### 5. Hulumtimi akademik → Bazë për punë të mëtejshme
+
+Dataset-i i ndërtuar dhe pipeline-i i fazës së tretë ofrojnë bazë të riprodhueshme për studime të tjera mbi cilësinë e ajrit.
+
+Metodologjia e përdorur kombinon modele supervised, interpretueshmëri, stabilitet kohor dhe forecast praktik.
+
+Projekti mund të zgjerohet lehtë me të dhëna të reja, modele më të avancuara ose analiza krahasuese për qytete të tjera.
+
+---
+
+### Konkluzione
+
+Përfundimet kryesore:
+
+Modelimi i të dhënave të cilësisë së ajrit është i mundshëm dhe i përdorshëm për parashikimin afatshkurtër të `PM2.5` në Prishtinë. Saktësia e arritur nga modeli i tunuar `CatBoost` me `R² ≈ 0.8165` e validon këtë qasje si të përshtatshme për një projekt praktik dhe akademik.
+
+`CatBoost` është modeli më i përshtatshëm supervised për këtë fazë, sepse ofroi performancën më të mirë nga modelet e krahasuara në fazën e dytë dhe u përmirësua më tej me tuning të kontrolluar në fazën e tretë.
+
+Të dhënat historike të ndotjes kanë fuqi të madhe parashikuese. Feature-i `pm25_lag_1` rezulton dominues, që tregon se gjendja e ndotjes në orën paraprake është shumë e rëndësishme për forecast-in e orës në vijim.
+
+Faktorët sezonalë dhe kohorë janë të rëndësishëm për modelin. `month_cos`, `pm25_lag_24`, `hour_sin` dhe `hour_cos` tregojnë se modeli kap ritme sezonale dhe ditore të ndotjes.
+
+Stabiliteti nuk është i njëjtë në të gjitha periudhat. Gabimi është më i lartë gjatë `Heating season`, gjë që është e pritshme për shkak të ngrohjes, stagnimit atmosferik dhe episodeve më të forta të ndotjes.
+
+Optimizimi i parametrave ishte i dobishëm, edhe pse përmirësimi numerik ishte modest. Vlera kryesore e fazës së tretë nuk është vetëm rritja e `R²`, por kombinimi i performancës me interpretueshmëri, stabilitet dhe demonstrim praktik.
+
+Dashboard-i Streamlit e bën projektin më të kuptueshëm dhe më të prezantueshëm, sepse përdoruesi mund të shohë forecast-in, skenarët, metrikat dhe interpretimin e modelit në një vend të vetëm.
+
+---
+
+### Perspektiva të ardhshme dhe rekomandime
+
+Përmirësimet e mundshme:
+
+#### Përfshirja e më shumë faktorëve mjedisorë dhe urbanë
+
+Në të ardhmen mund të shtohen të dhëna më të detajuara për trafikun, ngrohjen individuale, burimet industriale dhe lëvizjen urbane.
+
+Këta faktorë mund ta përmirësojnë aftësinë e modelit për të kapur episode lokale të ndotjes që nuk shpjegohen vetëm nga moti dhe historia e `PM2.5`.
+
+#### Integrimi i të dhënave zyrtare në kohë reale
+
+Një zgjerim i rëndësishëm do të ishte lidhja direkte me burime të përditësuara të cilësisë së ajrit, motit dhe energjisë.
+
+Kjo do ta kthente dashboard-in nga një demonstrim akademik në një sistem më afër përdorimit real operacional.
+
+#### Modelim sezonal më i avancuar
+
+Përdorimi i modeleve si `ARIMA`, `SARIMA` ose kombinimi i tyre me machine learning mund të ndihmojë në kapjen më të mirë të strukturës kohore.
+
+Kjo do të ishte veçanërisht e dobishme për periudha me sezonalitet të fortë, si dimri dhe sezoni i ngrohjes.
+
+#### Deep Learning për seri kohore
+
+Modele si `LSTM`, `GRU` ose arkitektura të tjera neurale për seri kohore mund të testohen për të kapur varësi më të gjata kohore.
+
+Këto modele mund të jenë të dobishme nëse dataset-i zgjerohet me më shumë vite, më shumë stacione matëse dhe më shumë variabla hyrëse.
+
+#### Modelim i veçantë sipas periudhave ose profileve të ndotjes
+
+Në vend të një modeli të vetëm global, mund të ndërtohen modele të veçanta për `Heating season`, `Cooling season`, ditët me stagnim atmosferik ose episode të larta të ndotjes.
+
+Kjo mund të përmirësojë saktësinë në situata ku sjellja e ndotjes ndryshon ndjeshëm nga mesatarja.
+
+#### Zgjerimi në ndotës të tjerë
+
+Projekti mund të zgjerohet për të parashikuar edhe ndotës të tjerë si `PM10`, `NO2`, `SO2`, `O3` ose `CO`, nëse sigurohen të dhëna të mjaftueshme.
+
+Kjo do të krijonte një pamje më të plotë të cilësisë së ajrit dhe ndikimit të faktorëve të ndryshëm mjedisorë.
+
+#### Analiza e rrezikut dhe skenarëve ekstremë
+
+Modelet mund të përdoren për analiza të skenarëve, për shembull ditë me mot të ftohtë, erë të dobët, lagështi të lartë ose prodhim më të lartë energjie.
+
+Kjo do të ndihmonte në vlerësimin e kushteve ku `PM2.5` ka më shumë gjasa të rritet dhe ku nevojiten masa më të hershme informuese.
+
+#### Përmirësimi i dashboard-it Streamlit
+
+Dashboard-i mund të zgjerohet me filtrime më të avancuara, krahasim mes periudhave, ngjyrosje sipas kategorive të rrezikut dhe eksportim të rezultateve.
+
+Një version i ardhshëm mund të përfshijë edhe refresh automatik të të dhënave, ruajtje të skenarëve dhe pamje më të detajuara për përdorues institucionalë.
+
 ## Anëtarët e grupit
 
 - **Diellza Përvetica**
