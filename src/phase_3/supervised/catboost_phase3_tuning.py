@@ -27,9 +27,10 @@ PHASE2_METRICS_PATH = PROJECT_ROOT / "data" / "phase_2" / "supervised" / "catboo
 
 DATA_DIR = PROJECT_ROOT / "data" / "phase_3" / "supervised" / "catboost_tuned"
 PLOTS_DIR = PROJECT_ROOT / "pictures" / "phase_3" / "supervised" / "catboost_tuned"
+ALL_FIGURES_DIR = PROJECT_ROOT / "pictures" / "phase_3" / "all_figures"
 MODEL_DIR = PROJECT_ROOT / "models" / "phase_3" / "catboost_tuned"
 
-for directory in [DATA_DIR, PLOTS_DIR, MODEL_DIR]:
+for directory in [DATA_DIR, PLOTS_DIR, ALL_FIGURES_DIR, MODEL_DIR]:
     directory.mkdir(parents=True, exist_ok=True)
 
 TARGET = "pm25"
@@ -157,6 +158,11 @@ def calculate_metrics(y_true: np.ndarray, y_pred: np.ndarray) -> dict[str, float
     }
 
 
+def save_phase3_figure(filename: str, **kwargs: object) -> None:
+    plt.savefig(PLOTS_DIR / filename, **kwargs)
+    plt.savefig(ALL_FIGURES_DIR / filename, **kwargs)
+
+
 def prepare_data() -> tuple[pd.DataFrame, list[str], object]:
     scaler = joblib.load(SCALER_PATH)
     df = pd.read_csv(INPUT_PATH)
@@ -234,7 +240,7 @@ def save_tuning_plot(results_df: pd.DataFrame) -> None:
     axes[1].tick_params(axis="x", rotation=25)
 
     plt.tight_layout()
-    plt.savefig(PLOTS_DIR / "catboost_tuning_candidates.png", dpi=300, bbox_inches="tight")
+    save_phase3_figure("catboost_tuning_candidates.png", dpi=300, bbox_inches="tight")
     plt.close()
 
 
@@ -261,7 +267,7 @@ def save_actual_vs_predicted(
     plt.ylabel("PM2.5")
     plt.legend()
     plt.tight_layout()
-    plt.savefig(PLOTS_DIR / "catboost_tuned_actual_vs_predicted.png", dpi=300)
+    save_phase3_figure("catboost_tuned_actual_vs_predicted.png", dpi=300)
     plt.close()
 
     plt.figure(figsize=(8, 5))
@@ -270,7 +276,7 @@ def save_actual_vs_predicted(
     plt.title("Tuned CatBoost residual distribution")
     plt.xlabel("Residual PM2.5")
     plt.tight_layout()
-    plt.savefig(PLOTS_DIR / "catboost_tuned_residual_diagnostics.png", dpi=300)
+    save_phase3_figure("catboost_tuned_residual_diagnostics.png", dpi=300)
     plt.close()
 
     return out
@@ -299,7 +305,7 @@ def save_shap_outputs(model: CatBoostRegressor, test_df: pd.DataFrame, feature_c
     plt.title("SHAP global importance for tuned CatBoost")
     plt.xlabel("Mean absolute SHAP value")
     plt.tight_layout()
-    plt.savefig(PLOTS_DIR / "catboost_tuned_shap_global_importance.png", dpi=300, bbox_inches="tight")
+    save_phase3_figure("catboost_tuned_shap_global_importance.png", dpi=300, bbox_inches="tight")
     plt.close()
 
     top_features = shap_df.head(8)["feature"].tolist()
@@ -331,7 +337,7 @@ def save_shap_outputs(model: CatBoostRegressor, test_df: pd.DataFrame, feature_c
     plt.xlabel("SHAP value in model space")
     plt.ylabel("")
     plt.tight_layout()
-    plt.savefig(PLOTS_DIR / "catboost_tuned_shap_direction.png", dpi=300, bbox_inches="tight")
+    save_phase3_figure("catboost_tuned_shap_direction.png", dpi=300, bbox_inches="tight")
     plt.close()
 
 
@@ -411,7 +417,7 @@ def save_time_stability_outputs(df: pd.DataFrame, feature_cols: list[str], param
     plt.xlabel("")
     plt.ylabel("OOF RMSE")
     plt.tight_layout()
-    plt.savefig(PLOTS_DIR / "catboost_tuned_seasonal_stability.png", dpi=300)
+    save_phase3_figure("catboost_tuned_seasonal_stability.png", dpi=300)
     plt.close()
 
     plt.figure(figsize=(10, 5))
@@ -421,7 +427,7 @@ def save_time_stability_outputs(df: pd.DataFrame, feature_cols: list[str], param
     plt.ylabel("OOF RMSE")
     plt.xticks(range(1, 13))
     plt.tight_layout()
-    plt.savefig(PLOTS_DIR / "catboost_tuned_monthly_stability.png", dpi=300)
+    save_phase3_figure("catboost_tuned_monthly_stability.png", dpi=300)
     plt.close()
 
 
@@ -541,7 +547,7 @@ def main() -> None:
     plt.title("Tuned CatBoost feature importance")
     plt.xlabel("Importance")
     plt.tight_layout()
-    plt.savefig(PLOTS_DIR / "catboost_tuned_feature_importance.png", dpi=300, bbox_inches="tight")
+    save_phase3_figure("catboost_tuned_feature_importance.png", dpi=300, bbox_inches="tight")
     plt.close()
 
     save_shap_outputs(best_model, test_df, feature_cols)
@@ -560,6 +566,7 @@ def main() -> None:
             "shap": str(DATA_DIR / "catboost_tuned_shap_global_importance.csv"),
             "seasonal_stability": str(DATA_DIR / "catboost_tuned_seasonal_stability.csv"),
         },
+        "all_figures_dir": str(ALL_FIGURES_DIR),
         "feature_columns": feature_cols,
     }
     with open(DATA_DIR / "catboost_tuned_run_info.json", "w", encoding="utf-8") as file:

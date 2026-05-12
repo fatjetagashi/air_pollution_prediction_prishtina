@@ -20,11 +20,17 @@ PHASE3_DAILY_SNAPSHOT = PROJECT_ROOT / "data" / "phase_3" / "forecasting" / "nex
 
 DATA_DIR = PROJECT_ROOT / "data" / "phase_3" / "comparison"
 PLOTS_DIR = PROJECT_ROOT / "pictures" / "phase_3" / "comparison"
+ALL_FIGURES_DIR = PROJECT_ROOT / "pictures" / "phase_3" / "all_figures"
 
-for directory in [DATA_DIR, PLOTS_DIR]:
+for directory in [DATA_DIR, PLOTS_DIR, ALL_FIGURES_DIR]:
     directory.mkdir(parents=True, exist_ok=True)
 
 sns.set_theme(style="whitegrid")
+
+
+def save_phase3_figure(filename: str, **kwargs: object) -> None:
+    plt.savefig(PLOTS_DIR / filename, **kwargs)
+    plt.savefig(ALL_FIGURES_DIR / filename, **kwargs)
 
 
 def save_table_image(df: pd.DataFrame, output_path: Path, title: str) -> None:
@@ -51,6 +57,7 @@ def save_table_image(df: pd.DataFrame, output_path: Path, title: str) -> None:
     ax.set_title(title, fontsize=13, pad=14)
     plt.tight_layout()
     plt.savefig(output_path, dpi=300, bbox_inches="tight")
+    plt.savefig(ALL_FIGURES_DIR / output_path.name, dpi=300, bbox_inches="tight")
     plt.close()
 
 
@@ -79,7 +86,7 @@ def build_phase2_supervised_snapshot() -> pd.DataFrame:
         ax.tick_params(axis="x", rotation=15)
     fig.suptitle("Phase 2 supervised models: where phase 3 starts", fontsize=14)
     plt.tight_layout()
-    plt.savefig(PLOTS_DIR / "phase2_supervised_metrics_reference.png", dpi=300, bbox_inches="tight")
+    save_phase3_figure("phase2_supervised_metrics_reference.png", dpi=300, bbox_inches="tight")
     plt.close()
     return out
 
@@ -131,7 +138,7 @@ def build_catboost_improvement_summary(phase2_df: pd.DataFrame) -> pd.DataFrame:
     plt.xlabel("")
     plt.ylabel("Metric value")
     plt.tight_layout()
-    plt.savefig(PLOTS_DIR / "catboost_phase2_vs_phase3_metrics.png", dpi=300, bbox_inches="tight")
+    save_phase3_figure("catboost_phase2_vs_phase3_metrics.png", dpi=300, bbox_inches="tight")
     plt.close()
 
     return summary
@@ -196,6 +203,7 @@ def main() -> None:
             "catboost_improvement_table": str(PLOTS_DIR / "catboost_phase2_vs_phase3_improvement_table.png"),
             "forecast_snapshot_table": str(PLOTS_DIR / "next_day_forecast_snapshot_table.png"),
         },
+        "all_figures_dir": str(ALL_FIGURES_DIR),
     }
     with open(DATA_DIR / "phase3_comparison_run_info.json", "w", encoding="utf-8") as file:
         json.dump(output_index, file, indent=2)

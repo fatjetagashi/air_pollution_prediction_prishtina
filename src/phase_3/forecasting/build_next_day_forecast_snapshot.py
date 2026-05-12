@@ -22,8 +22,9 @@ PROJECT_ROOT = Path(__file__).resolve().parents[3]
 DATA_DIR = PROJECT_ROOT / "data" / "phase_3" / "forecasting"
 EXTERNAL_DIR = DATA_DIR / "external"
 PLOTS_DIR = PROJECT_ROOT / "pictures" / "phase_3" / "forecasting"
+ALL_FIGURES_DIR = PROJECT_ROOT / "pictures" / "phase_3" / "all_figures"
 
-for directory in [DATA_DIR, EXTERNAL_DIR, PLOTS_DIR]:
+for directory in [DATA_DIR, EXTERNAL_DIR, PLOTS_DIR, ALL_FIGURES_DIR]:
     directory.mkdir(parents=True, exist_ok=True)
 
 KOSTT_PAGE_URL = "https://kostt.com/Transparency/BasicMarketDataOnGeneration"
@@ -49,6 +50,11 @@ PHASE2_MODEL_PATH = PROJECT_ROOT / "models" / "catboost_model" / "catboost_pm25_
 PHASE2_FEATURES_PATH = PROJECT_ROOT / "models" / "catboost_model" / "catboost_feature_columns.pkl"
 
 LOG1P_FEATURES = {TARGET, "pollution_stagnation_index", "rain"}
+
+
+def save_phase3_figure(filename: str, **kwargs: object) -> None:
+    plt.savefig(PLOTS_DIR / filename, **kwargs)
+    plt.savefig(ALL_FIGURES_DIR / filename, **kwargs)
 
 
 def request_headers() -> dict[str, str]:
@@ -460,7 +466,7 @@ def save_snapshot_plot(hourly_df: pd.DataFrame, daily_summary: pd.DataFrame) -> 
     ax1.legend(handles1 + handles2, labels1 + labels2, loc="upper left")
 
     plt.tight_layout()
-    plt.savefig(PLOTS_DIR / "next_day_pm25_forecast_snapshot.png", dpi=300, bbox_inches="tight")
+    save_phase3_figure("next_day_pm25_forecast_snapshot.png", dpi=300, bbox_inches="tight")
     plt.close()
 
 
@@ -483,7 +489,9 @@ def main() -> None:
             "generation_snapshot": str(DATA_DIR / "kostt_next_day_generation_snapshot.csv"),
             "weather_snapshot": str(EXTERNAL_DIR / "open_meteo_next_day_weather_snapshot.csv"),
             "plot": str(PLOTS_DIR / "next_day_pm25_forecast_snapshot.png"),
+            "all_figures_plot": str(ALL_FIGURES_DIR / "next_day_pm25_forecast_snapshot.png"),
         },
+        "all_figures_dir": str(ALL_FIGURES_DIR),
         "offline_demo_policy": "Use the saved snapshot files first; refresh from KOSTT/Open-Meteo only when desired.",
     }
     with open(DATA_DIR / "next_day_forecast_snapshot_run_info.json", "w", encoding="utf-8") as file:
