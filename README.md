@@ -3,7 +3,7 @@
 <table>
   <tr>
     <td width="150" align="center" valign="center">
-      <img src="https://upload.wikimedia.org/wikipedia/commons/e/e1/University_of_Prishtina_logo.svg" />
+      <img src="pictures/logo.png" />
     </td>
     <td valign="top">
       <p><strong>Universiteti i Prishtinës</strong></p>
@@ -68,11 +68,16 @@
    - [Interpretueshmëria e modelit](#interpretueshmëria-e-modelit)
    - [Stabiliteti kohor dhe sezonal](#stabiliteti-kohor-dhe-sezonal)
    - [Snapshot offline për parashikim të ditës së ardhshme](#snapshot-offline-për-parashikim-të-ditës-së-ardhshme)
+   - [Pamja dhe karakteristikat e dashboard-it Streamlit në fazën e tretë](#pamja-dhe-karakteristikat-e-dashboard-it-streamlit-në-fazën-e-tretë)
+   - [Vizualizimet e fazës së tretë](#vizualizimet-e-fazës-së-tretë)
    - [Ekzekutimi dhe riprodhueshmëria e fazës së tretë](#ekzekutimi-dhe-riprodhueshmëria-e-fazës-së-tretë)
    - [Artefaktet e fazës së tretë](#artefaktet-e-fazës-së-tretë)
    - [Interpretimi final i fazës së tretë](#interpretimi-final-i-fazës-së-tretë)
-8. [Anëtarët e grupit](#anëtarët-e-grupit)
-9. [Acknowledgments](#acknowledgments)
+   - [Kush përfiton dhe si?](#kush-përfiton-dhe-si)
+8. [Konkluzione](#konkluzione)
+9. [Perspektiva të ardhshme dhe rekomandime](#perspektiva-të-ardhshme-dhe-rekomandime)
+10. [Anëtarët e grupit](#anëtarët-e-grupit)
+11. [Acknowledgments](#acknowledgments)
 
 ---
 
@@ -697,9 +702,21 @@ Ky është hapi themelor i integrimit të të tre burimeve.
 2. Lexon dataset-in meteorologjik, duke anashkaluar rreshtat hyrës jo-standardë.
 3. Lexon dataset-in e energjisë pa header standard dhe e zbulon automatikisht rreshtin e header-it.
 
-<img width="366" height="54" alt="{BE5A24DC-1B28-4178-AC88-BC896FC2D274}" src="https://github.com/user-attachments/assets/1e1f6cd1-363b-4a64-9c9e-fcf356cfb1f6" />
+```python
+energy_raw = pd.read_csv(energy_path, header=None)
+
+header_idx = None
+for i in range(min(10, len(energy_raw))):
+    row_text = " ".join(map(str, energy_raw.iloc[i].tolist())).lower()
+    if "hour" in row_text and "date" in row_text:
+        header_idx = i
+        break
+
+if header_idx is None:
+    raise ValueError("Header row for energy dataset was not found.")
+```
    
-5. Normalizon emrat e kolonave të energjisë:
+4. Normalizon emrat e kolonave të energjisë:
    - `Ora Hour` → `hour`
    - `DATA Date` → `date`
    - `A3 (MW)` → `A3_MW`
@@ -708,36 +725,98 @@ Ky është hapi themelor i integrimit të të tre burimeve.
    - `B1 (MW)` → `B1_MW`
    - `B2 (MW)` → `B2_MW`
 
-<img width="369" height="137" alt="{AAE917B3-90A4-4AEF-972B-944317A01B36}" src="https://github.com/user-attachments/assets/7b1a9d31-108a-4b06-ae95-51c1ed11c883" />
+```python
+energy = energy_raw.iloc[header_idx:].copy()
+energy.columns = energy.iloc[0]
+energy = energy.iloc[1:].copy()
+energy.columns = [" ".join(str(col).replace("\n", " ").split()) for col in energy.columns]
 
-6. Konverton kolonat kohore në `datetime`.
-7. Harmonizon timezone-in e ndotjes dhe motit në `Europe/Belgrade`, pastaj i kthen në naive timestamps.
+energy = energy.rename(columns={
+    "Ora Hour": "hour",
+    "DATA Date": "date",
+    "A3 (MW)": "A3_MW",
+    "A4 (MW)": "A4_MW",
+    "A5 (MW)": "A5_MW",
+    "B1 (MW)": "B1_MW",
+    "B2 (MW)": "B2_MW",
+})
+```
 
-<img width="575" height="221" alt="{F4E9923A-69C5-4D33-80AC-C79D01092939}" src="https://github.com/user-attachments/assets/52283448-fda9-4aa2-947c-2261663d4255" />
+5. Konverton kolonat kohore në `datetime`.
+6. Harmonizon timezone-in e ndotjes dhe motit në `Europe/Belgrade`, pastaj i kthen në naive timestamps.
 
-10. Pastron duplikatet sipas `datetime`.
-11. Për dataset-in e energjisë:
+```python
+air["datetime"] = pd.to_datetime(air["datetime"], errors="coerce", utc=True)
+air["datetime"] = air["datetime"].dt.tz_convert("Europe/Belgrade").dt.tz_localize(None)
+air = air.dropna(subset=["datetime"])
+air = air.drop_duplicates(subset=["datetime"])
+air = air.sort_values("datetime").reset_index(drop=True)
+
+weather = weather.rename(columns={"time": "datetime"})
+weather["datetime"] = pd.to_datetime(weather["datetime"], errors="coerce", utc=True)
+weather["datetime"] = weather["datetime"].dt.tz_convert("Europe/Belgrade").dt.tz_localize(None)
+weather = weather.dropna(subset=["datetime"])
+weather = weather.drop_duplicates(subset=["datetime"])
+weather = weather.sort_values("datetime").reset_index(drop=True)
+```
+
+7. Pastron duplikatet sipas `datetime`.
+8. Për dataset-in e energjisë:
 
 - konverton `date`,
 - konverton `hour`,
 - krijon `datetime`,
 - llogarit `total_generation_mw`.
 
-<img width="592" height="81" alt="image" src="https://github.com/user-attachments/assets/8e114cc1-a1fa-4fbd-9461-357d0e7721be" />
+```python
+energy["date"] = pd.to_datetime(energy["date"], dayfirst=True, errors="coerce")
+energy["hour"] = pd.to_numeric(energy["hour"], errors="coerce")
 
-11. Zgjedh vetëm kolonat relevante nga secili burim.
+for col in ["A3_MW", "A4_MW", "A5_MW", "B1_MW", "B2_MW"]:
+    energy[col] = pd.to_numeric(energy[col], errors="coerce")
 
-<img width="381" height="57" alt="{65723B3D-B2FE-4A3A-84F0-49593283C896}" src="https://github.com/user-attachments/assets/98af75ad-9e60-4a80-8558-0e910875bb02" />
+energy = energy.dropna(subset=["date", "hour"])
+energy["hour_zero_based"] = energy["hour"] - 1
+energy["datetime"] = energy["date"] + pd.to_timedelta(energy["hour_zero_based"], unit="h")
+energy["datetime"] = energy["datetime"] + pd.Timedelta(hours=1)
+energy["total_generation_mw"] = energy[["A3_MW", "A4_MW", "A5_MW", "B1_MW", "B2_MW"]].sum(axis=1)
+```
 
-13. Kryen dy merge-e me `how="inner"`:
+9. Zgjedh vetëm kolonat relevante nga secili burim.
+
+```python
+air = air[["datetime", "co", "no2", "o3", "pm10", "pm25", "so2"]]
+energy = energy[[
+    "datetime", "A3_MW", "A4_MW", "A5_MW",
+    "B1_MW", "B2_MW", "total_generation_mw"
+]]
+```
+
+10. Kryen dy merge-e me `how="inner"`:
     - ndotja + moti,
     - pastaj rezultati + energjia.
-14. Krijon kolonat: - `date` - `hour` - `interval_start`
-    <img width="431" height="94" alt="{AA095FE6-7145-4932-98A4-BCCD0F0B1ACA}" src="https://github.com/user-attachments/assets/9cac6b45-b4fd-47a2-b479-650faa2d1d9f" />
+11. Krijon kolonat `date`, `hour` dhe `interval_start`.
+```python
+merged = air.merge(weather, on="datetime", how="inner")
+merged = merged.merge(energy, on="datetime", how="inner")
+merged = merged.sort_values("datetime").reset_index(drop=True)
+
+merged["date"] = merged["datetime"].dt.date
+merged["hour"] = merged["datetime"].dt.hour
+merged["interval_start"] = merged["datetime"] - pd.Timedelta(hours=1)
+```
 
 ##### Output
 
 - `data/phase_1/1A_merged_data_hourly_2023_2025.csv`
+
+```python
+print("MERGED DATASET")
+print(f"Rows: {merged.shape[0]}")
+print(f"Columns: {merged.shape[1]}")
+print(f"Total values: {merged.shape[0] * merged.shape[1]}")
+print(f"Datetime range: {merged['datetime'].min()} -> {merged['datetime'].max()}")
+```
 
 <img width="542" height="133" alt="image" src="https://github.com/user-attachments/assets/4718329f-b2cc-4645-948e-5eace36d9ec4" />
 
@@ -781,13 +860,29 @@ Ky skript bën profilizimin e vlerave unike për një grup kolonash kryesore.
 
 - lexon dataset-in e integruar,
 
-<img width="428" height="126" alt="{85DD1928-3765-4E4A-B0D3-D437772217AC}" src="https://github.com/user-attachments/assets/012286f2-7b62-4f35-90db-f70fb9c366c6" />
+```python
+df = pd.read_csv(input_path)
+
+pollution_cols = ["co", "no2", "o3", "pm10", "pm25", "so2"]
+energy_cols = ["A3_MW", "A4_MW", "A5_MW", "B1_MW", "B2_MW", "total_generation_mw"]
+all_cols = pollution_cols + weather_cols + energy_cols
+```
 
 - për secilën kolonë nxjerr vlerat unike jo-null,
 - i rendit,
 - dhe i ruan si CSV të ndarë në folderin `data/phase_1/1B_distinct_values/`.
 
-<img width="523" height="140" alt="{1410133E-14B9-47EE-8AA0-816CBF5B5718}" src="https://github.com/user-attachments/assets/a5667111-5910-4add-9ea8-036b7ce44bf7" />
+```python
+for col in all_cols:
+    if col in df.columns:
+        distinct_vals = pd.DataFrame(df[col].dropna().unique(), columns=[col])
+        distinct_vals = distinct_vals.sort_values(by=col)
+
+        file_name = clean_name(col)
+        distinct_vals.to_csv(output_dir / f"distinct_{file_name}.csv", index=False)
+    else:
+        print(f"Kolona '{col}' nuk u gjet ne dataset!")
+```
 
 ##### Output
 
@@ -809,9 +904,23 @@ Folderi `1B_distinct_values/` përmban një skedar të veçantë për secilin at
 
 Pamje nga skedaret unik:
 
-<img width="216" height="289" alt="{DBB27AF7-8935-4189-90AB-624587087BFA}" src="https://github.com/user-attachments/assets/32f47cab-4898-4f79-9eab-887c81351c11" />
+```text
+data/phase_1/1B_distinct_values/
+├── distinct_co.csv
+├── distinct_no2.csv
+├── distinct_o3.csv
+├── distinct_pm10.csv
+├── distinct_pm25.csv
+├── distinct_so2.csv
+├── distinct_a3_mw.csv
+├── distinct_a4_mw.csv
+├── distinct_a5_mw.csv
+├── distinct_b1_mw.csv
+├── distinct_b2_mw.csv
+└── distinct_total_generation_mw.csv
+```
 
-##### Roli ne pipeline
+##### Roli në pipeline
 
 Ky hap mbështet eksplorimin fillestar të shpërndarjeve dhe kontrollin e domenit të vlerave.
 
@@ -827,18 +936,27 @@ Ky skript kryen pastrimin fillestar të dimensionit kohor dhe duplikateve.
 
 - `data/phase_1/1A_merged_data_hourly_2023_2025.csv`
 
-##### Çarë bën
+##### Çfarë bën
 
 - konverton `datetime` në format korrekt,
 - heq rreshtat ku `datetime` është invalid,
 - rendit dataset-in sipas kohës,
 
-<img width="495" height="33" alt="{7CEB88CC-989B-436C-8FA7-0419144A38ED}" src="https://github.com/user-attachments/assets/cec00aab-5620-4c60-9428-4f12eb715584" />
+```python
+df["datetime"] = pd.to_datetime(df["datetime"], errors="coerce")
+df = df.dropna(subset=["datetime"]).sort_values("datetime").reset_index(drop=True)
+```
 
 - numëron duplikatet,
 - heq duplikatet e plota.
 
-<img width="308" height="93" alt="{1DBC8645-552B-4E2F-A0CB-606E6BD3F65A}" src="https://github.com/user-attachments/assets/50220b1f-63cd-4f8e-a1ef-962ad42637eb" />
+```python
+duplicate_count = df.duplicated().sum()
+print(f"Numri i duplikateve: {duplicate_count}")
+
+df = df.drop_duplicates().reset_index(drop=True)
+df.to_csv(output_path, index=False)
+```
 
 ##### Output
 
@@ -858,42 +976,85 @@ Ky skript zbaton rregulla të cilësisë së të dhënave.
 
 - `data/phase_1/2A_cleaned_no_duplicates.csv`
 
-##### Cfarë bën
+##### Çfarë bën
 
 1. Për ndotësit:
    - zëvendëson vlerat negative me `NaN`, sepse fizikisht nuk kanë kuptim.
 
-<img width="512" height="93" alt="{0C81D64B-A74D-4E95-A0A6-3984C71E3294}" src="https://github.com/user-attachments/assets/938f0433-10ef-49db-9912-c8ed171f60ae" />
+```python
+pollution_cols = ["pm10", "pm25", "co", "no2", "o3", "so2"]
+for col in pollution_cols:
+    if col in df.columns:
+        negative_count = (df[col] < 0).sum()
+        df[col] = df[col].apply(lambda x: np.nan if pd.notnull(x) and x < 0 else x)
+        print(f"{col}: {negative_count} vlera negative u kthyen ne NaN")
+```
 
 2. Për drejtimin e erës:
    - normalizon këndet me operatorin `% 360`.
 
-<img width="489" height="67" alt="{F02A6AFC-BA27-434F-95B7-86B1A65A9967}" src="https://github.com/user-attachments/assets/ebf9098e-5ae0-4999-ab6c-5c0b10ae8838" />
+```python
+wind_col = "wind_direction_10m (°)"
+if wind_col in df.columns:
+    df[wind_col] = df[wind_col].apply(lambda x: x % 360 if pd.notnull(x) else x)
+```
 
 3. Për reshjet dhe borën:
    - kufizon vlerat minimale në `0`.
 
-<img width="460" height="79" alt="{914CA309-CC22-417F-A765-2859E4665F16}" src="https://github.com/user-attachments/assets/560223dd-1a43-48b4-97a8-32d7618d3001" />
+```python
+for col in ["rain (mm)", "snowfall (cm)"]:
+    if col in df.columns:
+        negative_count = (df[col] < 0).sum()
+        df[col] = df[col].clip(lower=0)
+        print(f"{col}: {negative_count} vlera negative u korrigjuan ne 0")
+```
 
 4. Për kolonat e energjisë:
    - kufizon vlerat negative në `0`.
 
-<img width="509" height="91" alt="{5F4D0161-B98D-4182-AC4B-3BFE405120E0}" src="https://github.com/user-attachments/assets/966bc5f6-dbbd-4496-bdaf-e05d89be397a" />
+```python
+energy_cols = ["A3_MW", "A4_MW", "A5_MW", "B1_MW", "B2_MW", "total_generation_mw"]
+for col in energy_cols:
+    if col in df.columns:
+        negative_count = (df[col] < 0).sum()
+        df[col] = df[col].clip(lower=0)
+        print(f"{col}: {negative_count} vlera negative u korrigjuan ne 0")
+```
 
 5. Për lagështinë relative:
    - kufizon vlerat në intervalin `[0, 100]`.
 
-<img width="606" height="76" alt="{E9F73771-109C-4B82-9280-FBEE45ED2B89}" src="https://github.com/user-attachments/assets/70822281-b25c-4c46-89d9-1e8164a29079" />
+```python
+if "relative_humidity_2m (%)" in df.columns:
+    below_zero = (df["relative_humidity_2m (%)"] < 0).sum()
+    above_hundred = (df["relative_humidity_2m (%)"] > 100).sum()
+    df["relative_humidity_2m (%)"] = df["relative_humidity_2m (%)"].clip(0, 100)
+    print(f"relative_humidity_2m (%): {below_zero + above_hundred} vlera u kufizuan ne intervalin 0-100")
+```
 
 6. Për `total_generation_mw`:
    - e rillogarit nga `A3_MW + A4_MW + A5_MW + B1_MW + B2_MW`
    - dhe korrigjon mospërputhjet me totalin ekzistues.
 
-<img width="549" height="112" alt="{0A3BF60A-A524-4BEA-8DF1-47B6D5D51A61}" src="https://github.com/user-attachments/assets/d4b50c73-9640-48be-8fb8-f56c2cb3412b" />
+```python
+energy_units = ["A3_MW", "A4_MW", "A5_MW", "B1_MW", "B2_MW"]
+if all(col in df.columns for col in energy_units) and "total_generation_mw" in df.columns:
+    original_total = df["total_generation_mw"].copy()
+    recalculated_total = df[energy_units].sum(axis=1)
+    mismatch_count = (original_total.round(3) != recalculated_total.round(3)).sum()
+    print(f"total_generation_mw: {mismatch_count} raste me mospërputhje u korrigjuan")
+    df["total_generation_mw"] = recalculated_total
+```
 
 7. Rrumbullakon kolonat numerike në 3 shifra dhjetore.
 
-<img width="424" height="79" alt="{3661720A-987A-41F9-9DD0-CF8A14E2B71F}" src="https://github.com/user-attachments/assets/bb783372-bf4d-4ca5-8513-540fa23d363c" />
+```python
+numeric_cols = df.select_dtypes(include=["float64", "int64"]).columns
+df[numeric_cols] = df[numeric_cols].round(3)
+
+df.to_csv(output_path, index=False)
+```
 
 ##### Output
 
@@ -923,21 +1084,51 @@ Ky skript trajton vlerat mungesë.
 
 - llogarit mungesat për kolonë dhe përqindjen e tyre,
 
-<img width="486" height="55" alt="{01A3889B-10DA-4CF6-B7CB-E035F8E86192}" src="https://github.com/user-attachments/assets/928a6ed8-7b39-4275-a0f9-2e7ab8a9ee39" />
+```python
+missing_count = df.isnull().sum().reset_index()
+missing_count.columns = ["Column", "Missing_Values"]
+missing_count["Percentage"] = (missing_count["Missing_Values"] / len(df)) * 100
+```
 
 - raporton sa vlera janë plotësuar për secilin ndotës,
 
-<img width="436" height="38" alt="{CE119CE1-8023-47EF-9506-C10DD4FDF390}" src="https://github.com/user-attachments/assets/4b7ee0b4-ddf2-4a0f-b0f4-05e0661173b7" />
+```python
+before_pm10 = df["pm10"].isnull().sum() if "pm10" in df.columns else 0
+before_pm25 = df["pm25"].isnull().sum() if "pm25" in df.columns else 0
+
+print(f"PM10: U mbushën {before_pm10} vlera.")
+print(f"PM25: U mbushën {before_pm25} vlera.")
+```
 
 - plotëson vlerat mungesë sipas logjikës së përcaktuar,
 
-<img width="303" height="129" alt="{3540B4D7-B0C9-4BCB-AEF1-1243168EF91D}" src="https://github.com/user-attachments/assets/7ed3034b-734f-434e-bea2-6701b38ef879" />
+```python
+if "pm10" in df.columns:
+    df["pm10"] = df["pm10"].bfill()
 
-<img width="303" height="129" alt="image" src="https://github.com/user-attachments/assets/41ba9138-c6ac-4886-8df8-5fabeab93f7c" />
+if "pm25" in df.columns:
+    df["pm25"] = df["pm25"].bfill()
+```
+
+```python
+gases = ["co", "no2", "o3", "so2"]
+for col in gases:
+    if col in df.columns:
+        before_missing = df[col].isnull().sum()
+        df[col] = df[col].ffill()
+        print(f"{col}: U mbushën {before_missing} vlera.")
+
+df = df.ffill().bfill()
+```
 
 - verifikon sa `NULL` mbeten në fund.
 
-<img width="303" height="40" alt="{73B7F4D2-33C2-4F4A-A6D8-15DA761D7F8F}" src="https://github.com/user-attachments/assets/b9de8d37-492e-48c5-b67d-1d8a163e05f0" />
+```python
+df.to_csv(output_path, index=False)
+
+print(f"Dataseti final u ruajt te: {output_path}")
+print("Vlera Null të mbetura:", df.isnull().sum().sum())
+```
 
 ##### Output
 
@@ -965,18 +1156,41 @@ Ky skript bën validimin final të dataset-it pas trajtimit të mungesave.
 
    dhe korrigjon rastet kur `pm25 > pm10` duke vendosur `pm25 = pm10`.
 
-<img width="" height="110" alt="image" src="https://github.com/user-attachments/assets/4f5c7fa0-b2b9-4571-916d-129fafd8d098" />
+```python
+if "pm10" in df.columns and "pm25" in df.columns:
+    bad_ratio_mask = df["pm25"] > df["pm10"]
+    pm_anomaly_count = bad_ratio_mask.sum()
+    df.loc[bad_ratio_mask, "pm25"] = df.loc[bad_ratio_mask, "pm10"]
+    print(f"Raste ku PM2.5 > PM10 u korrigjuan: {pm_anomaly_count}")
+```
 
-3. Kontrollon gaps kohore:
+2. Kontrollon gaps kohore:
    - konverton `datetime`,
    - llogarit diferencën ndërmjet rreshtave,
    - numëron boshllëqet më të mëdha se 1 orë.
 
-<img width="366" height="181" alt="image" src="https://github.com/user-attachments/assets/06b9f87f-0840-4ed7-a164-e96a28f134a7" />
+```python
+df["datetime"] = pd.to_datetime(df["datetime"], errors="coerce")
+df = df.sort_values("datetime").reset_index(drop=True)
+
+time_diff = df["datetime"].diff()
+gap_count = (time_diff > pd.Timedelta(hours=1)).sum()
+
+if gap_count == 0:
+    print("Nuk ka gaps ne timeline.")
+else:
+    print(f"U gjeten {gap_count} gaps ne timeline.")
+```
 
 3. Kontrollon nëse kanë mbetur `NULL`.
 
-<img width="366" height="141" alt="{F77E8282-105B-45A2-ADFE-DB03A3297653}" src="https://github.com/user-attachments/assets/8b5ce324-d735-43f6-814e-692895bf63d5" />
+```python
+total_nulls = df.isnull().sum().sum()
+if total_nulls == 0:
+    print("Nuk ka vlera NULL ne dataset.")
+else:
+    print(f"Ka ende {total_nulls} vlera NULL ne dataset.")
+```
 
 ##### Output
 
@@ -1010,7 +1224,13 @@ Ky skript kryen analizën fillestare të target-it dhe marrëdhënieve të tij m
    - `pm25`
    - `so2`
 
-<img width="" height="60" alt="image" src="https://github.com/user-attachments/assets/1487f6c8-0454-49a3-8a8d-17ede5f5cd2c" />
+```python
+POLLUTANTS = ["co", "no2", "o3", "pm10", "pm25", "so2"]
+
+summary_stats = df[POLLUTANTS].describe().T
+print("\n=== Pollutant summary statistics ===")
+print(summary_stats)
+```
 
 2. Formon një subset me:
    - ndotësit,
@@ -1019,9 +1239,16 @@ Ky skript kryen analizën fillestare të target-it dhe marrëdhënieve të tij m
 
 3. Llogarit matricën e korrelacionit.
 
-  <img width="508" height="111" alt="{38275DD5-5A2E-4CFF-91C0-5C666AFF3DFE}" src="https://github.com/user-attachments/assets/86d203a6-4fcc-454a-8efe-d5aeaa473b77" />
+```python
+predictors = ENERGY_FEATURES + WEATHER_FEATURES
+subset = df[POLLUTANTS + predictors].dropna()
+corr = subset[POLLUTANTS + predictors].corr()
 
-5. Krijon dy heatmap-a:
+corr_pollutant_predictors = corr.loc[POLLUTANTS, predictors].round(3)
+corr_pollutant = corr.loc[POLLUTANTS, POLLUTANTS].round(3)
+```
+
+4. Krijon dy heatmap-a:
    - korrelacioni i ndotësve me energjinë dhe motin,
    - korrelacioni mes vetë ndotësve.
 
@@ -1059,7 +1286,14 @@ Ky skript ndërton dataset-in e pasuruar me tipare të reja.
   - `day_of_week`
   - `month`
 
-<img width="507" height="93" alt="{9D5E10B1-7451-40A8-BA92-01DE19B074E0}" src="https://github.com/user-attachments/assets/382465fc-9cae-4af7-925a-1ff1dc0ae6a1" />
+```python
+df["datetime"] = pd.to_datetime(df["datetime"], errors="coerce")
+df = df.dropna(subset=["datetime"]).sort_values("datetime").reset_index(drop=True)
+
+df["hour"] = df["datetime"].dt.hour
+df["day_of_week"] = df["datetime"].dt.dayofweek
+df["month"] = df["datetime"].dt.month
+```
 
 ###### 2. Encodim ciklik
 
@@ -1070,7 +1304,12 @@ Krijon:
 - `month_sin`
 - `month_cos`
 
-<img width="388" height="68" alt="{027EC64A-7F94-4673-8856-A2FA95B7FD55}" src="https://github.com/user-attachments/assets/e6ef76dd-d39e-4241-aadf-313f80d33cb4" />
+```python
+df["hour_sin"] = np.sin(2 * np.pi * df["hour"] / 24)
+df["hour_cos"] = np.cos(2 * np.pi * df["hour"] / 24)
+df["month_sin"] = np.sin(2 * np.pi * df["month"] / 12)
+df["month_cos"] = np.cos(2 * np.pi * df["month"] / 12)
+```
 
 Qëllimi është të përfaqësojë natyrën ciklike të orës dhe muajit.
 
@@ -1088,7 +1327,13 @@ krijohen lag-e:
 - `lag_3h`
 - `lag_6h`
 
-<img width="611" height="128" alt="{0129CD0F-43C3-46C7-857F-CC79A2E4E235}" src="https://github.com/user-attachments/assets/7f5885ea-3b9b-41b0-a1f2-24b55c428940" />
+```python
+LAG_COLS = ["total_generation_mw", "wind_speed_10m (km/h)", "temperature_2m (°C)"]
+
+for col in LAG_COLS:
+    for lag in [1, 3, 6]:
+        df[f"{col}_lag_{lag}h"] = df[col].shift(lag)
+```
 
 ###### 4. Rolling features
 
@@ -1097,7 +1342,12 @@ Krijohen:
 - `total_gen_rolling_sum_12h`
 - `total_gen_rolling_sum_24h`
 
-<img width="604" height="34" alt="{84F7C7EB-928A-4284-92DF-77244C86351B}" src="https://github.com/user-attachments/assets/8cd91bcd-5ad6-4c38-b1e7-a03d92793557" />
+```python
+for window in [12, 24]:
+    df[f"total_gen_rolling_sum_{window}h"] = (
+        df["total_generation_mw"].rolling(window=window, min_periods=window).sum()
+    )
+```
 
 ###### 5. Interaction features
 
@@ -1106,7 +1356,10 @@ Krijohen:
 - `temp_wind_interact`
 - `generation_humidity_interact`
 
-<img width="595" height="41" alt="{CB1FE4F3-C35F-4AB7-8E84-B5113E104D46}" src="https://github.com/user-attachments/assets/161bea77-ad84-4b1c-a731-d92b75a50321" />
+```python
+df["temp_wind_interact"] = df["temperature_2m (°C)"] * df["wind_speed_10m (km/h)"]
+df["generation_humidity_interact"] = df["total_generation_mw"] * df["relative_humidity_2m (%)"]
+```
 
 ###### 6. Stagnation proxy
 
@@ -1116,7 +1369,11 @@ Krijohet:
 
 Ky indikator përpiqet të përfaqësojë situatat kur ka prodhim të lartë dhe erë të ulët, pra kushte më të favorshme për grumbullim ndotjesh.
 
-<img width="593" height="31" alt="{7736A968-7617-4B05-AB85-04C693E45840}" src="https://github.com/user-attachments/assets/0b615ce4-1d7f-4258-bfb9-1d04e49561ac" />
+```python
+df["pollution_stagnation_index"] = (
+    df["total_generation_mw"] / (df["wind_speed_10m (km/h)"] + 0.1)
+)
+```
 
 ###### 7. Wind vector decomposition
 
@@ -1125,13 +1382,22 @@ Nga shpejtësia dhe drejtimi i erës krijohen:
 - `wind_x_vector`
 - `wind_y_vector`
 
-<img width="322" height="69" alt="{9EE0FD41-466C-406C-A328-75084CFF86E6}" src="https://github.com/user-attachments/assets/69a803b2-5af1-4a22-beb9-808ec06a6aeb" />
+```python
+wv = df["wind_speed_10m (km/h)"]
+wd_rad = df["wind_direction_10m (°)"] * np.pi / 180
+
+df["wind_x_vector"] = wv * np.cos(wd_rad)
+df["wind_y_vector"] = wv * np.sin(wd_rad)
+```
 
 ###### 8. Heqja e rreshtave me `NaN`
 
 Pas krijimit të lag-eve dhe rolling windows hiqen rreshtat fillestarë që mbeten pa vlera të plota.
 
-<img width="252" height="34" alt="{9214D524-77A2-425F-88FE-1406798AAE8D}" src="https://github.com/user-attachments/assets/367b4a97-7563-4864-ab33-e71c1d7bd6ea" />
+```python
+df = df.dropna().reset_index(drop=True)
+df.to_csv(OUTPUT, index=False)
+```
 
 ##### Output
 
@@ -1178,19 +1444,52 @@ Vlerat jashtë këtij intervali nuk fshihen, por priten në kufijtë përkatës.
 
 - identifikon kolonat numerike kandidate,
 
-<img width="" height="100" alt="image" src="https://github.com/user-attachments/assets/1277d0ad-20f8-4edd-aa83-7c3518c640b5" />
+```python
+candidate_cols = [
+    col for col in df.columns
+    if col not in NON_FEATURE_COLS
+    and col not in EXCLUDED_COLS
+    and pd.api.types.is_numeric_dtype(df[col])
+]
+```
 
 - llogarit kufijtë e poshtëm dhe të sipërm,
 
-<img width="333" height="264" alt="{7637B515-ECC8-42F7-93E4-F51A36886583}" src="https://github.com/user-attachments/assets/5dc44eae-bd83-4230-8c0c-96b366d56d3f" />
+```python
+for col in candidate_cols:
+    original = df[col]
+
+    lower = original.quantile(LOWER_Q)
+    upper = original.quantile(UPPER_Q)
+
+    low_count = int((original < lower).sum())
+    high_count = int((original > upper).sum())
+
+    df[col] = original.clip(lower=lower, upper=upper)
+```
 
 - numëron sa vlera u cap-en në secilin krah,
 
-<img width="300" height="64" alt="{868F8310-591A-4475-A72B-6B3610709F19}" src="https://github.com/user-attachments/assets/cc9dd492-043c-4cf0-8eea-6e39a24f3fd0" />
+```python
+summary.append({
+    "feature": col,
+    "capped_low": low_count,
+    "capped_high": high_count,
+    "total_capped": low_count + high_count
+})
+```
 
 - krijon një raport për tiparet me më shumë vlera të kufizuara.
 
-<img width="304" height="92" alt="{5C06F89A-7C0E-4C98-B3D6-7EB360549105}" src="https://github.com/user-attachments/assets/f774921a-69c9-493e-bb9d-55b0fe23b267" />
+```python
+summary_df = pd.DataFrame(summary).sort_values(
+    by="total_capped",
+    ascending=False
+)
+
+print("Top features with most capped values:")
+print(summary_df.head(10))
+```
 
 ##### Output
 
@@ -1228,15 +1527,42 @@ Për secilën kolonë numerike:
 
 - krahason skewness para dhe pas transformimit,
 
-<img width="293" height="140" alt="{ACF2D39A-7132-44DE-94FD-02FBADE7EFE2}" src="https://github.com/user-attachments/assets/52ef2624-8f11-497a-a0c8-219132acfe5e" />
+```python
+skew_before_all = df[candidate_cols].skew()
+results = []
+
+for col in candidate_cols:
+    original = df[col].copy()
+    skew_before = original.skew()
+    method = "none"
+```
 
 - ruan metodën e përdorur për secilën kolonë,
 
-<img width="600" height="283" alt="{54D65469-B661-45E2-8812-109DCE98FE9B}" src="https://github.com/user-attachments/assets/3de4131c-acf9-4a06-80d8-beb30e751223" />
+```python
+if abs(skew_before) > SKEW_THRESHOLD:
+    if (original >= 0).all():
+        transformed = np.log1p(original)
+        method = "log1p"
+    else:
+        transformer = PowerTransformer(method="yeo-johnson", standardize=False)
+        transformed = transformer.fit_transform(original.to_frame()).flatten()
+        method = "yeo-johnson"
+
+    df_transformed[col] = transformed
+else:
+    df_transformed[col] = original
+```
 
 - raporton mean absolute skewness dhe median absolute skewness para/pas.
 
-<img width="" height="86" alt="{27116D5F-1372-4BBB-8835-D8036D487641}" src="https://github.com/user-attachments/assets/33186496-a0f3-45a0-a447-d9ac72219563" />
+```python
+mean_abs_skew_before = skew_before_all.abs().mean()
+mean_abs_skew_after = df_transformed[candidate_cols].skew().abs().mean()
+
+median_abs_skew_before = skew_before_all.abs().median()
+median_abs_skew_after = df_transformed[candidate_cols].skew().abs().median()
+```
 
 ##### Output
 
@@ -1324,19 +1650,37 @@ Ky skript standardizon të gjitha kolonat numerike.
 - ndan kolonat jo-numerike:
   - `datetime`
   - `date`
-    <img width="245" height="40" alt="image" src="https://github.com/user-attachments/assets/3b8d43de-8615-4725-8c5f-c773c74ec3f4" />
+```python
+df_datetime = df[NON_NUMERIC_COLS].copy()
+df_numeric = df.drop(columns=NON_NUMERIC_COLS)
+```
 
 - standardizon të gjitha kolonat e tjera me `StandardScaler`,
 
-<img width="245" height="107" alt="{51FDEC3D-668F-4A86-8459-33B135196EF7}" src="https://github.com/user-attachments/assets/3f8a062d-ef76-49dc-b919-029f3b898aca" />
+```python
+scaler = StandardScaler()
+scaler.fit(df_numeric)
+
+df_numeric_scaled = pd.DataFrame(
+    scaler.transform(df_numeric),
+    columns=df_numeric.columns,
+    index=df_numeric.index,
+)
+```
 
 - rikombinon kolonat kohore me kolonat e shkallëzuara,
 
-<img width="345" height="40" alt="image" src="https://github.com/user-attachments/assets/e5a9f4c5-a3b1-4bf1-a60e-6a9f03a08a4e" />
+```python
+df_scaled = pd.concat([df_datetime, df_numeric_scaled], axis=1)
+df_scaled.to_csv(OUTPUT, index=False)
+```
 
 - ruan scaler-in e trajnuar.
 
-<img width="239" height="73" alt="{90AB8B67-BC65-4DC9-BC92-374F23CB0AF9}" src="https://github.com/user-attachments/assets/1a0cae99-1434-486b-b814-794fc2c30c57" />
+```python
+with open(SCALER_PATH, "wb") as f:
+    pickle.dump(scaler, f)
+```
 
 ##### Output
 
@@ -1385,14 +1729,33 @@ Hiqen:
 - të gjitha kolonat me `lag` në emër
 - çdo kolonë tjetër që përmban `pm25` përveç target-it
 
-<img width="600" height="170" alt="{EFCA4BD3-8CC8-415E-9549-24C0D552CEE1}" src="https://github.com/user-attachments/assets/4c08beec-c313-4a65-a8df-404cf0206fad" />
+```python
+cols_to_drop = [c for c in df_numeric.columns if "lag" in c.lower()]
+cols_to_drop += [c for c in df_numeric.columns if "pm25" in c and c != TARGET]
+cols_to_drop += [
+    c for c in POLLUTANTS_TO_DROP + STRUCTURAL_TO_DROP
+    if c in df_numeric.columns
+]
+
+df_numeric = df_numeric.drop(columns=list(set(cols_to_drop)))
+```
 
 ###### 2. Heqje e kolonave konstante ose pothuajse konstante
 
 - kolona me vetëm 1 vlerë unike
 - kolona me devijim standard pothuajse zero
 
-<img width="433" height="108" alt="{4008EF22-1994-45BF-999C-9B987BC2C534}" src="https://github.com/user-attachments/assets/ee46b9fb-c185-4479-baff-13c2531c6685" />
+```python
+X = df_numeric.drop(columns=[TARGET])
+
+constant_cols = [col for col in X.columns if X[col].nunique() <= 1]
+if constant_cols:
+    X = X.drop(columns=constant_cols)
+
+near_constant_cols = [col for col in X.columns if X[col].std() < 1e-8]
+if near_constant_cols:
+    X = X.drop(columns=near_constant_cols)
+```
 
 ###### 3. VIF-based elimination
 
@@ -1402,13 +1765,33 @@ Për kolonat e mbetura:
 - hiqet iterativisht kolona me VIF më të lartë derisa:
   - VIF maksimal të jetë më i vogël ose i barabartë me `7.0`
 
-<div>
-<img width="" height="50" alt="image" src="https://github.com/user-attachments/assets/21f5dded-12fd-4750-b587-5a92fffa0e48" />
-</div>
+```python
+def calculate_vif(df_numeric):
+    vif_data = pd.DataFrame()
+    vif_data["Feature"] = df_numeric.columns
+    vif_data["VIF"] = [
+        variance_inflation_factor(df_numeric.values, i)
+        for i in range(df_numeric.shape[1])
+    ]
+    return vif_data.sort_values("VIF", ascending=False)
+```
 
-<div>
-<img width="" height="200" alt="image" src="https://github.com/user-attachments/assets/4829919c-e535-4a39-a6cd-b2f6862d06c1" />
-</div>
+```python
+while True:
+    vif_results = calculate_vif(X)
+    vif_results = vif_results.replace([float("inf"), -float("inf")], pd.NA).dropna()
+    vif_results = vif_results[~vif_results["Feature"].isin(FORCE_KEEP)]
+
+    if vif_results.empty:
+        break
+
+    max_vif = vif_results.iloc[0]["VIF"]
+    if max_vif > VIF_THRESHOLD:
+        feature_to_drop = vif_results.iloc[0]["Feature"]
+        X = X.drop(columns=[feature_to_drop])
+    else:
+        break
+```
 
 ###### 4. Raportim
 
@@ -1419,7 +1802,13 @@ Në fund raportohet:
 - numri i tipareve finale,
 - tiparet e mbajtura, të renditura sipas korrelacionit absolut me `pm25`.
 
-<img width="506" height="151" alt="{7C2D8392-1353-40D2-937B-7035E866EA08}" src="https://github.com/user-attachments/assets/3e56b2a1-22dc-4f9f-843c-b03bd3c7eaee" />
+```python
+final_features = X.columns.tolist() + [TARGET]
+df_selected = df_numeric[final_features].copy()
+df_final = pd.concat([df_datetime, df_selected], axis=1)
+
+df_final.to_csv(OUTPUT, index=False)
+```
 
 ##### Output
 
@@ -4102,6 +4491,130 @@ Ky dizajn e bën projektin më të sigurt për prezantim, sepse rezultatet mund 
 
 ---
 
+### Pamja dhe karakteristikat e dashboard-it Streamlit në fazën e tretë
+
+Përveç skriptave dhe artefakteve të ruajtura, faza e tretë prezantohet edhe përmes dashboard-it interaktiv në `app.py`, i ndërtuar me `Streamlit` dhe `Plotly`. Ky dashboard e bën projektin më të qartë për prezantim, sepse rezultatet nuk mbeten vetëm në tabela statike, por mund të eksplorohen në mënyrë vizuale dhe interaktive.
+
+Dashboard-i hapet me titullin `Prishtina PM2.5 Forecast Studio` dhe është organizuar në katër pamje kryesore:
+
+1. `Overview` - jep një pamje të përgjithshme të dataset-it, periudhës historike, numrit të rreshtave dhe vlerave më të fundit të `PM2.5`.
+2. `Historical scenario replay` - lejon testimin e skenarëve mbi të dhëna historike, duke krahasuar vlerën reale, parashikimin bazë dhe parashikimin pas ndryshimeve të vendosura nga përdoruesi.
+3. `Future forecast` - paraqet snapshot-in 24-orësh të fazës së tretë, të ndërtuar nga plani day-ahead i KOSTT-it dhe parashikimi i motit nga Open-Meteo.
+4. `Model center` - shfaq rezultatet e modeleve, krahasimin `CatBoost` faza 2 kundrejt fazës 3, `SHAP`, stabilitetin sezonal dhe metrikat e ruajtura.
+
+Në anën e majtë dashboard-i ka panelin `Scenario setup`, ku përdoruesi mund të zgjedhë preset-e dhe të ndryshojë faktorë si:
+
+- zhvendosja e prodhimit të energjisë;
+- ndryshimi i temperaturës;
+- ndryshimi i reshjeve;
+- ndryshimi i lagështisë;
+- ndryshimi i shpejtësisë së erës;
+- ndryshimi i drejtimit të erës.
+
+Këto kontrolle e bëjnë dashboard-in të dobishëm për demonstrim, sepse përdoruesi mund të shohë si ndryshon parashikimi i `PM2.5` kur ndryshojnë kushtet atmosferike ose profili i prodhimit të energjisë. Në vend që modeli të shfaqet vetëm si rezultat numerik, Streamlit e paraqet atë si një mjet eksplorues ku mund të kuptohen më lehtë lidhjet mes motit, energjisë dhe ndotjes së ajrit.
+
+![Dashboard Overview](pictures/dashboard/dashboard_overview.png)
+
+Kjo pamje paraqet faqen kryesore të dashboard-it, ku shihen periudha historike, numri i rreshtave dhe trendi ditor i `PM2.5`.
+
+![Dashboard Historical Scenario Replay](pictures/dashboard/dashboard_historical_scenario_replay.png)
+
+Kjo pamje demonstron skenarët historikë, ku krahasohen vlera reale, parashikimi bazë dhe parashikimi pas ndryshimit të faktorëve.
+
+![Dashboard Future Forecast](pictures/dashboard/dashboard_future_forecast.png)
+
+Kjo pamje paraqet forecast-in praktik 24-orësh të fazës së tretë të ndërtuar nga KOSTT, Open-Meteo dhe `CatBoost` i tunuar.
+
+![Dashboard Model Center](pictures/dashboard/dashboard_model_center.png)
+
+Kjo pamje shfaq qendrën e rezultateve të modelit, duke përmbledhur metrikat, krahasimet dhe rezultatet kryesore të fazës së tretë.
+
+Karakteristikat kryesore të dashboard-it janë:
+
+- përdorimi i grafikëve interaktivë `Plotly` për seri kohore, krahasime dhe rezultate të modeleve;
+- shfaqja e metrikave kryesore me `st.metric`, si mesatarja, maksimumi, risku dhe horizonti i parashikimit;
+- përdorimi i tabelave interaktive për forecast-et, rezultatet e modeleve dhe kontrollin e skenarëve;
+- mbështetja në artefakte të ruajtura, që e bën prezantimin stabil edhe nëse nuk bëhet refresh online gjatë demonstrimit;
+- ndarja e qartë e pamjeve në tabs, që e bën aplikacionin më të lehtë për t'u ndjekur nga përdorues teknikë dhe jo-teknikë.
+
+Në këtë mënyrë, Streamlit në fazën e tretë shërben si shtresa praktike e projektit: ai lidh modelin e tunuar `CatBoost`, forecast-in 24-orësh dhe interpretimin e rezultateve në një mjedis të vetëm vizual.
+
+---
+
+### Vizualizimet e fazës së tretë
+
+Ky seksion i mbledh në një vend figurat analitike kryesore të fazës së tretë. Qëllimi është që rezultatet e tuning-ut, interpretueshmërisë, stabilitetit dhe forecast-it të jenë të lehta për t'u parë dhe krahasuar gjatë leximit ose prezantimit.
+
+#### Referenca nga faza e dytë dhe tuning-u i CatBoost
+
+![Phase 2 Supervised Reference Table](pictures/phase_3/comparison/phase2_supervised_reference_table.png)
+
+Kjo tabelë shërben si pikënisje e fazës së tretë, duke paraqitur rezultatet e modeleve supervised nga faza e dytë.
+
+![Phase 2 Supervised Metrics Reference](pictures/phase_3/comparison/phase2_supervised_metrics_reference.png)
+
+Kjo figurë tregon vizualisht pse `CatBoost` u zgjodh si modeli kryesor për rievaluim dhe përmirësim.
+
+![CatBoost Tuning Candidates](pictures/phase_3/supervised/catboost_tuned/catboost_tuning_candidates.png)
+
+Kjo figurë krahason kandidatët e tuning-ut sipas `validation_RMSE` dhe `test_RMSE`.
+
+![CatBoost Phase 3 Tuning Reference Table](pictures/phase_3/comparison/catboost_phase3_tuning_reference_table.png)
+
+Kjo tabelë paraqet parametrat kryesorë të kandidatëve të testuar dhe metrikat e tyre kryesore.
+
+![CatBoost Phase 2 vs Phase 3 Metrics](pictures/phase_3/comparison/catboost_phase2_vs_phase3_metrics.png)
+
+Kjo figurë krahason metrikat kryesore të `CatBoost` para dhe pas tuning-ut të fazës së tretë.
+
+![CatBoost Phase 2 vs Phase 3 Improvement Table](pictures/phase_3/comparison/catboost_phase2_vs_phase3_improvement_table.png)
+
+Kjo tabelë përmbledh përmirësimin absolut dhe relativ të modelit të tunuar kundrejt versionit të fazës së dytë.
+
+#### Diagnostika dhe interpretueshmëria e modelit
+
+![Tuned CatBoost Actual vs Predicted](pictures/phase_3/supervised/catboost_tuned/catboost_tuned_actual_vs_predicted.png)
+
+Kjo figurë tregon sa afër janë parashikimet e modelit të tunuar me vlerat reale të `PM2.5` në test set.
+
+![Tuned CatBoost Residual Diagnostics](pictures/phase_3/supervised/catboost_tuned/catboost_tuned_residual_diagnostics.png)
+
+Kjo figurë paraqet shpërndarjen e residualeve dhe ndihmon të kuptohet struktura e gabimeve të modelit.
+
+![Tuned CatBoost Feature Importance](pictures/phase_3/supervised/catboost_tuned/catboost_tuned_feature_importance.png)
+
+Kjo figurë tregon feature-at me rëndësinë më të madhe sipas modelit `CatBoost` të tunuar.
+
+![SHAP Global Importance](pictures/phase_3/supervised/catboost_tuned/catboost_tuned_shap_global_importance.png)
+
+Kjo figurë shpjegon ndikimin mesatar të feature-ave në parashikim duke përdorur `mean absolute SHAP value`.
+
+![SHAP Direction](pictures/phase_3/supervised/catboost_tuned/catboost_tuned_shap_direction.png)
+
+Kjo figurë tregon drejtimin e ndikimit të feature-ave kryesorë, pra nëse ato priren ta rrisin apo ta ulin parashikimin.
+
+#### Stabiliteti kohor dhe sezonal
+
+![Seasonal Stability](pictures/phase_3/supervised/catboost_tuned/catboost_tuned_seasonal_stability.png)
+
+Kjo figurë krahason performancën e modelit në `Heating season` dhe `Cooling season`.
+
+![Monthly Stability](pictures/phase_3/supervised/catboost_tuned/catboost_tuned_monthly_stability.png)
+
+Kjo figurë tregon si ndryshon `RMSE` sipas muajve dhe ndihmon të dallohen periudhat më sfiduese për modelin.
+
+#### Forecast praktik i ditës së ardhshme
+
+![Next Day Forecast Snapshot Table](pictures/phase_3/comparison/next_day_forecast_snapshot_table.png)
+
+Kjo tabelë përmbledh snapshot-in e ruajtur për forecast-in 24-orësh të `PM2.5`.
+
+![Next Day PM2.5 Forecast Snapshot](pictures/phase_3/forecasting/next_day_pm25_forecast_snapshot.png)
+
+Kjo figurë paraqet forecast-in orar të `PM2.5` për ditën e ardhshme bashkë me profilin e shpërndarë të prodhimit të energjisë.
+
+---
+
 ### Ekzekutimi dhe riprodhueshmëria e fazës së tretë
 
 Për ta riprodhuar fazën e tretë në mënyrë të kontrolluar, skriptat ekzekutohen në këtë rend:
@@ -4174,42 +4687,6 @@ Në aspekt praktik, ky projekt mund t'u ndihmojë përdoruesve teknikë dhe jo-t
 
 Në këtë mënyrë, faza e tretë e forcon ndjeshëm projektin, sepse e zhvendos nga trajnim modelesh drejt një sistemi më të shpjegueshëm, më të krahasueshëm dhe më praktik. Përveç performancës numerike, projekti tani tregon edhe pse modeli merr vendime të caktuara, si sillet në periudha të ndryshme kohore dhe si mund të përdoret për një forecast 24-orësh.
 
----
-
-### Pamja dhe karakteristikat e dashboard-it Streamlit në fazën e tretë
-
-Përveç skriptave dhe artefakteve të ruajtura, faza e tretë prezantohet edhe përmes dashboard-it interaktiv në `app.py`, i ndërtuar me `Streamlit` dhe `Plotly`. Ky dashboard e bën projektin më të qartë për prezantim, sepse rezultatet nuk mbeten vetëm në tabela statike, por mund të eksplorohen në mënyrë vizuale dhe interaktive.
-
-Dashboard-i hapet me titullin `Prishtina PM2.5 Forecast Studio` dhe është organizuar në katër pamje kryesore:
-
-1. `Overview` - jep një pamje të përgjithshme të dataset-it, periudhës historike, numrit të rreshtave dhe vlerave më të fundit të `PM2.5`.
-2. `Historical scenario replay` - lejon testimin e skenarëve mbi të dhëna historike, duke krahasuar vlerën reale, parashikimin bazë dhe parashikimin pas ndryshimeve të vendosura nga përdoruesi.
-3. `Future forecast` - paraqet snapshot-in 24-orësh të fazës së tretë, të ndërtuar nga plani day-ahead i KOSTT-it dhe parashikimi i motit nga Open-Meteo.
-4. `Model center` - shfaq rezultatet e modeleve, krahasimin `CatBoost` faza 2 kundrejt fazës 3, `SHAP`, stabilitetin sezonal dhe metrikat e ruajtura.
-
-Në anën e majtë dashboard-i ka panelin `Scenario setup`, ku përdoruesi mund të zgjedhë preset-e dhe të ndryshojë faktorë si:
-
-- zhvendosja e prodhimit të energjisë;
-- ndryshimi i temperaturës;
-- ndryshimi i reshjeve;
-- ndryshimi i lagështisë;
-- ndryshimi i shpejtësisë së erës;
-- ndryshimi i drejtimit të erës.
-
-Këto kontrolle e bëjnë dashboard-in të dobishëm për demonstrim, sepse përdoruesi mund të shohë si ndryshon parashikimi i `PM2.5` kur ndryshojnë kushtet atmosferike ose profili i prodhimit të energjisë. Në vend që modeli të shfaqet vetëm si rezultat numerik, Streamlit e paraqet atë si një mjet eksplorues ku mund të kuptohen më lehtë lidhjet mes motit, energjisë dhe ndotjes së ajrit.
-
-Karakteristikat kryesore të dashboard-it janë:
-
-- përdorimi i grafikëve interaktivë `Plotly` për seri kohore, krahasime dhe rezultate të modeleve;
-- shfaqja e metrikave kryesore me `st.metric`, si mesatarja, maksimumi, risku dhe horizonti i parashikimit;
-- përdorimi i tabelave interaktive për forecast-et, rezultatet e modeleve dhe kontrollin e skenarëve;
-- mbështetja në artefakte të ruajtura, që e bën prezantimin stabil edhe nëse nuk bëhet refresh online gjatë demonstrimit;
-- ndarja e qartë e pamjeve në tabs, që e bën aplikacionin më të lehtë për t'u ndjekur nga përdorues teknikë dhe jo-teknikë.
-
-Në këtë mënyrë, Streamlit në fazën e tretë shërben si shtresa praktike e projektit: ai lidh modelin e tunuar `CatBoost`, forecast-in 24-orësh dhe interpretimin e rezultateve në një mjedis të vetëm vizual.
-
----
-
 ### Kush përfiton dhe si?
 
 #### 1. Qytetarët e Prishtinës → Informim më i mirë për cilësinë e ajrit
@@ -4254,7 +4731,7 @@ Projekti mund të zgjerohet lehtë me të dhëna të reja, modele më të avancu
 
 ---
 
-### Konkluzione
+## Konkluzione
 
 Përfundimet kryesore:
 
@@ -4274,7 +4751,7 @@ Dashboard-i Streamlit e bën projektin më të kuptueshëm dhe më të prezantue
 
 ---
 
-### Perspektiva të ardhshme dhe rekomandime
+## Perspektiva të ardhshme dhe rekomandime
 
 Përmirësimet e mundshme:
 
