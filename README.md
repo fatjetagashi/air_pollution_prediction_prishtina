@@ -4324,6 +4324,20 @@ Parametrat kryesorë të testuar ishin:
 
 Modeli final u zgjodh sipas `validation_RMSE`, ndërsa metrikat finale u raportuan në holdout test. Kjo ruan ndarjen metodologjike mes përzgjedhjes së modelit dhe vlerësimit final.
 
+#### Tabela e të gjithë kandidatëve të testuar
+
+| Kandidati | Iterations | Learning rate | Depth | L2 leaf reg | Random strength | Bagging temperature | Early stopping rounds | Best iteration | Validation RMSE | Test RMSE | Test R² |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| `phase2_reference` | 600 | 0.03 | 6 | 3 | 1.0 | 1.0 | 50 | 595 | 1.9520 | 4.3210 | 0.8147 |
+| `regularized_depth5` | 900 | 0.025 | 5 | 5 | 1.0 | 0.5 | 80 | 899 | 1.9530 | 4.3531 | 0.8120 |
+| `slow_regularized_depth5` | 1200 | 0.02 | 5 | 7 | 1.5 | 0.7 | 100 | 1155 | 1.9527 | 4.3026 | 0.8163 |
+| `compact_depth4` | 900 | 0.03 | 4 | 5 | 1.0 | 0.5 | 80 | 897 | 1.9684 | 4.3507 | 0.8122 |
+| `strong_regularized_depth6` | 1200 | 0.02 | 6 | 10 | 2.0 | 0.8 | 100 | 1137 | 1.9458 | 4.3002 | 0.8165 |
+| `compact_strong_regularization` | 1200 | 0.02 | 4 | 10 | 2.0 | 0.8 | 100 | 1193 | 1.9703 | 4.3282 | 0.8141 |
+| `best_validation_candidate` | 1500 | 0.015 | 5 | 12 | 2.0 | 0.8 | 120 | 1499 | 1.9494 | 4.2865 | 0.8177 |
+
+Kjo tabelë përmbledh të gjitha konfigurimet e ruajtura në `data/phase_3/supervised/catboost_tuned/catboost_tuning_candidates.csv` dhe e bën më të qartë dallimin mes kandidatit me validimin më të mirë dhe kandidatit me rezultatin më të mirë në holdout test.
+
 #### Kandidati final i zgjedhur
 
 | Parametri | Vlera |
